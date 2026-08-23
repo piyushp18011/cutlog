@@ -174,7 +174,7 @@
   .section-heading .n { font-size: 12px; color: var(--muted-dim); font-family: 'JetBrains Mono', monospace; }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-  .card { background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; }
+  .card { background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; content-visibility: auto; contain-intrinsic-size: 0 260px; }
   .card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.45); transform: translateY(-2px); }
   .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #241717; cursor: pointer; display: block; }
   .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -254,18 +254,56 @@
     position: fixed;
     width: 170px;
     background: #fffdf6;
-    border: 1px solid rgba(0,0,0,0.45);
     border-radius: 4px;
     padding: 10px 10px 12px;
     box-shadow: 0 14px 30px rgba(0,0,0,0.35);
     z-index: 150;
     opacity: 0;
     transform: scale(0.85) rotate(0deg);
-    transition: opacity .5s ease, transform .5s ease;
+    transition: opacity .4s ease, transform .4s ease;
     pointer-events: none;
     cursor: pointer;
   }
-  .meme-note.show { opacity: 1; pointer-events: auto; }
+  .meme-note.show { opacity: 1; pointer-events: auto; transform: scale(1) rotate(var(--rot, 0deg)); }
+  .meme-note.show.anim-pop     { animation: memeAnimPop .55s cubic-bezier(.34,1.56,.64,1); }
+  .meme-note.show.anim-drop    { animation: memeAnimDrop .6s cubic-bezier(.34,1.56,.64,1); }
+  .meme-note.show.anim-slide   { animation: memeAnimSlide .55s cubic-bezier(.34,1.56,.64,1); }
+  .meme-note.show.anim-flip    { animation: memeAnimFlip .6s cubic-bezier(.34,1.56,.64,1); }
+  .meme-note.show.anim-elastic { animation: memeAnimElastic .7s cubic-bezier(.34,1.56,.64,1); }
+  .meme-note.show.anim-spin    { animation: memeAnimSpin .6s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes memeAnimPop {
+    0% { opacity:0; transform: scale(0.1) rotate(var(--rot,0deg)); }
+    70% { opacity:1; transform: scale(1.2) rotate(var(--rot,0deg)); }
+    100% { opacity:1; transform: scale(1) rotate(var(--rot,0deg)); }
+  }
+  @keyframes memeAnimDrop {
+    0% { opacity:0; transform: translateY(-160px) rotate(calc(var(--rot,0deg) - 40deg)); }
+    60% { opacity:1; transform: translateY(16px) rotate(calc(var(--rot,0deg) + 6deg)); }
+    80% { transform: translateY(-6px) rotate(var(--rot,0deg)); }
+    100% { opacity:1; transform: translateY(0) rotate(var(--rot,0deg)); }
+  }
+  @keyframes memeAnimSlide {
+    0% { opacity:0; transform: translateX(180px) rotate(calc(var(--rot,0deg) - 25deg)) scale(0.6); }
+    70% { opacity:1; transform: translateX(-14px) rotate(var(--rot,0deg)) scale(1.06); }
+    100% { opacity:1; transform: translateX(0) rotate(var(--rot,0deg)) scale(1); }
+  }
+  @keyframes memeAnimFlip {
+    0% { opacity:0; transform: perspective(600px) rotateY(180deg) scale(0.7); }
+    60% { opacity:1; transform: perspective(600px) rotateY(-16deg) scale(1.06); }
+    100% { opacity:1; transform: perspective(600px) rotateY(0deg) rotate(var(--rot,0deg)) scale(1); }
+  }
+  @keyframes memeAnimElastic {
+    0% { opacity:0; transform: scale(1.9) rotate(var(--rot,0deg)); }
+    40% { opacity:1; transform: scale(0.72) rotate(var(--rot,0deg)); }
+    65% { transform: scale(1.12) rotate(var(--rot,0deg)); }
+    85% { transform: scale(0.95) rotate(var(--rot,0deg)); }
+    100% { opacity:1; transform: scale(1) rotate(var(--rot,0deg)); }
+  }
+  @keyframes memeAnimSpin {
+    0% { opacity:0; transform: scale(0.2) rotate(calc(var(--rot,0deg) + 420deg)); }
+    70% { opacity:1; transform: scale(1.1) rotate(calc(var(--rot,0deg) - 12deg)); }
+    100% { opacity:1; transform: scale(1) rotate(var(--rot,0deg)); }
+  }
   .meme-note img { width: 100%; border-radius: 3px; display: block; background: #eee; }
   .meme-note .cap { font-family: 'Oswald', sans-serif; font-style: italic; font-size: 13px; margin-top: 6px; color: #4a4740; text-align: center; line-height: 1.25; }
   .meme-note .x {
@@ -661,17 +699,23 @@ function buildCatSidebar() {
   const catList = document.getElementById('catList');
   const counts = {};
   state.entries.forEach(e => counts[e.category] = (counts[e.category] || 0) + 1);
-  let html = `<div class="cat-link ${activeCat==='All'?'active':''}" onclick="setActiveCat('All')">
+  let html = `<div class="cat-link ${activeCat==='All'?'active':''}" data-cat="All">
     <span class="cat-main">All sections</span><span class="n">${state.entries.length}</span></div>`;
   state.categories.forEach(c => {
-    html += `<div class="cat-link ${activeCat===c?'active':''}">
-      <span class="cat-main" onclick="setActiveCat('${escapeHtml(c)}')">${escapeHtml(c)}<span class="n">${counts[c]||0}</span></span>
-      <button class="rm" onclick="event.stopPropagation(); removeCategory('${escapeHtml(c)}')" title="remove section">✕</button>
+    html += `<div class="cat-link ${activeCat===c?'active':''}" data-cat="${escapeHtml(c)}">
+      <span class="cat-main">${escapeHtml(c)}<span class="n">${counts[c]||0}</span></span>
+      <button class="rm" data-rm-cat="${escapeHtml(c)}" title="remove section">✕</button>
     </div>`;
   });
   catList.innerHTML = html;
 }
 function setActiveCat(c) { activeCat = c; renderAll(); }
+document.getElementById('catList').addEventListener('click', (e) => {
+  const rmBtn = e.target.closest('[data-rm-cat]');
+  if (rmBtn) { e.stopPropagation(); removeCategory(rmBtn.dataset.rmCat); return; }
+  const link = e.target.closest('.cat-link');
+  if (link) setActiveCat(link.dataset.cat);
+});
 
 async function removeCategory(c) {
   if (!confirm(`Remove the "${c}" section? Videos already tagged with it will stay searchable, just not listed under it.`)) return;
@@ -798,7 +842,12 @@ document.getElementById('newCatInput').addEventListener('keydown', async (e) => 
     } catch (err) { alert("Couldn't save the new section — check your connection."); }
   }
 });
-document.getElementById('search').addEventListener('input', (e) => { searchQuery = e.target.value.trim(); renderAll(); });
+let searchDebounce;
+document.getElementById('search').addEventListener('input', (e) => {
+  clearTimeout(searchDebounce);
+  const val = e.target.value.trim();
+  searchDebounce = setTimeout(() => { searchQuery = val; renderAll(); }, 180);
+});
 
 /* ===================== FILES ===================== */
 function buildFileTypeSidebar() {
@@ -914,7 +963,12 @@ async function submitAddFile() {
     activeFileType = type;
   } catch (e) { alert("Couldn't save — check your connection and try again."); }
 }
-document.getElementById('fileSearch').addEventListener('input', (e) => { fileSearchQuery = e.target.value.trim(); renderAll(); });
+let fileSearchDebounce;
+document.getElementById('fileSearch').addEventListener('input', (e) => {
+  clearTimeout(fileSearchDebounce);
+  const val = e.target.value.trim();
+  fileSearchDebounce = setTimeout(() => { fileSearchQuery = val; renderAll(); }, 180);
+});
 
 /* ===================== MEMES (sticky notes) ===================== */
 const MEME_SLOTS = 3;
@@ -1040,6 +1094,7 @@ function toggleMemePopups() {
   }
 }
 
+const MEME_ANIMS = ['anim-pop', 'anim-drop', 'anim-slide', 'anim-flip', 'anim-elastic', 'anim-spin'];
 function initMemeSlots() {
   const layer = document.getElementById('memeLayer');
   layer.innerHTML = '';
@@ -1067,16 +1122,15 @@ function showSlot(i) {
   const rot = (Math.random() * 16 - 8).toFixed(1);
   el.style.top = topPct + 'vh';
   el.style.left = leftPct + 'vw';
+  el.style.setProperty('--rot', rot + 'deg');
+  el.className = 'meme-note ' + MEME_ANIMS[Math.floor(Math.random() * MEME_ANIMS.length)];
   el.innerHTML = `
     <span class="x" onclick="deleteMeme('${meme.id}', event)">✕</span>
     <img src="${meme.imageUrl}" alt="meme" loading="lazy">
     ${meme.caption ? `<div class="cap">${escapeHtml(meme.caption)}</div>` : ''}
   `;
   el.onclick = () => hideSlot(i, 300 + Math.random()*3000);
-  requestAnimationFrame(() => {
-    el.style.transform = `scale(1) rotate(${rot}deg)`;
-    el.classList.add('show');
-  });
+  requestAnimationFrame(() => { el.classList.add('show'); });
   const visibleFor = 5000 + Math.random() * 5000;
   slotTimers[i] = setTimeout(() => hideSlot(i, 0), visibleFor);
 }
