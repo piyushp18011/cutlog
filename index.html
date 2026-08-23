@@ -64,7 +64,7 @@
   .script { font-family: 'Oswald', sans-serif; font-style: italic; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 
   .topbar {
-    position: sticky; top: 0; z-index: 20;
+    position: sticky; top: 0; z-index: 200;
     background: rgba(246,243,236,0.85);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-soft);
@@ -114,6 +114,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    z-index: 200;
   }
   .brand { padding: 24px 22px 16px; border-bottom: 1px solid var(--border-soft); }
   .brand .display { font-size: 32px; font-weight: 700; line-height: 1; color: var(--text); }
@@ -157,7 +158,7 @@
   .add-cat-row input:focus { border-color: var(--accent); border-style: solid; }
 
   .content { flex: 1; min-width: 0; }
-  header { position: sticky; top: 40px; z-index: 10; background: var(--surface); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-soft); padding: 16px 28px; }
+  header { position: sticky; top: 40px; z-index: 200; background: var(--surface); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-soft); padding: 16px 28px; }
   .header-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   header h1 { font-size: 14px; margin: 0; font-weight: 700; white-space: nowrap; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
   #search { flex: 1; min-width: 160px; padding: 9px 14px; background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13.5px; outline: none; color: var(--text); font-family: inherit; }
@@ -221,7 +222,7 @@
   .file-card-body .del { background:none; border:none; color:var(--muted-dim); cursor:pointer; font-size:11px; font-family:inherit; padding:0; }
   .file-card-body .del:hover { color: var(--danger); }
 
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
   .overlay.open { display: flex; }
   .modal { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 460px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.55); }
   .modal h2 { margin: 0 0 4px; font-size: 24px; font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.02em; }
@@ -237,7 +238,7 @@
   .err { color: var(--danger); font-size: 12px; margin-top: -6px; margin-bottom: 10px; display: none; }
   .err.show { display: block; }
 
-  .player-overlay { display: none; position: fixed; inset: 0; background: rgba(20,19,16,0.92); z-index: 200; align-items: center; justify-content: center; padding: 30px; }
+  .player-overlay { display: none; position: fixed; inset: 0; background: rgba(20,19,16,0.92); z-index: 300; align-items: center; justify-content: center; padding: 30px; }
   .player-overlay.open { display: flex; }
   .player-box { width: 100%; max-width: 860px; }
   .player-box iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius); background: #000; }
@@ -253,24 +254,42 @@
   .meme-note {
     position: fixed;
     width: 170px;
-    background: #fffdf6;
-    border: 1px solid rgba(0,0,0,0.45);
-    border-radius: 4px;
-    padding: 10px 10px 12px;
-    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
-    z-index: 150;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.55);
+    z-index: 100;
     opacity: 0;
     transform: scale(0.85) rotate(0deg);
-    transition: opacity .5s ease, transform .5s ease;
+    transition: opacity .45s ease, transform .65s cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: none;
     cursor: pointer;
   }
   .meme-note.show { opacity: 1; pointer-events: auto; }
-  .meme-note img { width: 100%; border-radius: 3px; display: block; background: #eee; }
-  .meme-note .cap { font-family: 'Oswald', sans-serif; font-style: italic; font-size: 13px; margin-top: 6px; color: #4a4740; text-align: center; line-height: 1.25; }
+  .meme-note::before {
+    content: '';
+    position: absolute;
+    top: -11px; left: 50%;
+    width: 48px; height: 18px;
+    background: var(--tape-color, rgba(224,178,58,0.88));
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    border-radius: 2px;
+    transform: translateX(-50%) rotate(var(--tape-rot, -5deg));
+  }
+  .meme-note img { width: 100%; border-radius: 10px; display: block; background: #1a1212; }
+  .meme-note .cap-wrap { display: flex; justify-content: center; margin-top: 8px; }
+  .meme-note .cap {
+    font-family: 'Oswald', sans-serif; font-style: italic; font-weight: 600; font-size: 12.5px;
+    color: #fff; text-align: center; line-height: 1.25;
+    background: rgba(18,12,12,0.85); padding: 4px 11px; border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transform: rotate(var(--cap-rot, 0deg));
+    max-width: 90%;
+  }
   .meme-note .x {
     position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%;
-    background: var(--danger); color: #fff; border: 2px solid #fffdf6; font-size: 12px; line-height: 1;
+    background: var(--danger); color: #fff; border: 2px solid var(--surface-solid); font-size: 12px; line-height: 1;
     display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity .15s;
   }
   .meme-note:hover .x { opacity: 1; }
@@ -282,7 +301,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .fab:hover { background: #b8901f; }
-  .fab-stack { position: fixed; bottom: 26px; right: 26px; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .fab-stack { position: fixed; bottom: 26px; right: 26px; z-index: 200; display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .fab-stack .fab { position: static; }
   .fab-mini {
     width: 38px; height: 38px; border-radius: 50%; background: var(--surface-solid); color: var(--text);
@@ -465,7 +484,7 @@
 <div class="player-overlay" id="playerOverlay">
   <div class="player-box">
     <div class="player-close"><button onclick="closePlayer()">✕ close</button></div>
-    <iframe id="playerFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <iframe id="playerFrame" src="about:blank" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -750,7 +769,7 @@ function openPlayer(videoId) {
 }
 function closePlayer() {
   document.getElementById('playerOverlay').classList.remove('open');
-  document.getElementById('playerFrame').src = '';
+  document.getElementById('playerFrame').src = 'about:blank';
 }
 async function deleteEntry(id) {
   if (!confirm('Remove this clip from the log?')) return;
@@ -1056,6 +1075,19 @@ function initMemeSlots() {
 function scheduleSlotShow(i, delay) {
   slotTimers[i] = setTimeout(() => showSlot(i), delay);
 }
+function randomEntryTransform() {
+  const variants = [
+    'translate(-130vw, 10px) rotate(-40deg) scale(0.4)',
+    'translate(130vw, -10px) rotate(40deg) scale(0.4)',
+    'translate(6px, -120vh) rotate(-25deg) scale(0.5)',
+    'translate(-6px, 120vh) rotate(25deg) scale(0.5)',
+    'translate(-70px, -70px) rotate(-420deg) scale(0.15)',
+    'translate(70px, -70px) rotate(420deg) scale(0.15)',
+    'scale(2.8) rotate(' + (Math.random() * 200 - 100).toFixed(0) + 'deg)',
+    'translate(30px, -260px) rotate(180deg) scale(0.3)'
+  ];
+  return variants[Math.floor(Math.random() * variants.length)];
+}
 function showSlot(i) {
   if (!memePopupsEnabled) return;
   if (!state.memes || state.memes.length === 0) { scheduleSlotShow(i, 4000); return; }
@@ -1065,14 +1097,28 @@ function showSlot(i) {
   const topPct = 8 + Math.random() * 62;
   const leftPct = 4 + Math.random() * 74;
   const rot = (Math.random() * 16 - 8).toFixed(1);
+  const tapeRot = (Math.random() * 20 - 10).toFixed(1);
+  const tapeColors = ['rgba(224,178,58,0.88)', 'rgba(200,38,44,0.85)', 'rgba(143,23,28,0.85)', 'rgba(240,240,235,0.85)'];
+  const tapeColor = tapeColors[Math.floor(Math.random() * tapeColors.length)];
+  const capRot = (Math.random() * 6 - 3).toFixed(1);
   el.style.top = topPct + 'vh';
   el.style.left = leftPct + 'vw';
+  el.style.setProperty('--tape-rot', tapeRot + 'deg');
+  el.style.setProperty('--tape-color', tapeColor);
+  el.style.setProperty('--cap-rot', capRot + 'deg');
   el.innerHTML = `
     <span class="x" onclick="deleteMeme('${meme.id}', event)">✕</span>
     <img src="${meme.imageUrl}" alt="meme" loading="lazy">
-    ${meme.caption ? `<div class="cap">${escapeHtml(meme.caption)}</div>` : ''}
+    ${meme.caption ? `<div class="cap-wrap"><div class="cap">${escapeHtml(meme.caption)}</div></div>` : ''}
   `;
   el.onclick = () => hideSlot(i, 300 + Math.random()*3000);
+  el.classList.remove('show');
+  el.style.transition = 'none';
+  el.style.opacity = '0';
+  el.style.transform = randomEntryTransform();
+  void el.offsetHeight; /* force reflow so the browser registers the start position first */
+  el.style.transition = '';
+  el.style.transitionDuration = (0.55 + Math.random() * 0.35).toFixed(2) + 's';
   requestAnimationFrame(() => {
     el.style.transform = `scale(1) rotate(${rot}deg)`;
     el.classList.add('show');
