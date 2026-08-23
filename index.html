@@ -148,6 +148,10 @@
   }
   .cat-link:hover .rm { opacity: 1; }
   .cat-link .rm:hover { color: var(--danger); }
+  .cat-link.dragging { opacity: 0.4; }
+  .cat-link.drag-over { border-left-color: var(--accent-2); background: rgba(205,163,53,0.14); }
+  .cat-link .grip { opacity: 0; color: var(--muted-dim); font-size: 13px; cursor: grab; touch-action: none; padding: 0 2px; }
+  .cat-link:hover .grip { opacity: 0.7; }
 
   .add-cat-row { padding: 10px 22px 20px; margin-top: auto; }
   .add-cat-row input {
@@ -192,6 +196,65 @@
 
   .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius); }
   .empty-state .display { font-size: 22px; color: var(--muted); margin-bottom: 6px; }
+
+  .watched-badge {
+    position: absolute; top: 8px; left: 8px; background: rgba(20,15,15,0.78); color: var(--text);
+    font-size: 10.5px; padding: 4px 8px; border-radius: 20px; font-family: 'JetBrains Mono', monospace;
+  }
+  .watched-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .watched-btn {
+    background: var(--surface-solid); border: 1px solid var(--border); color: var(--muted);
+    font-size: 11.5px; padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+  }
+  .watched-btn:hover { border-color: var(--accent-2); color: var(--text); }
+  .watched-btn.on { background: rgba(127,168,118,0.18); border-color: #7fa876; color: #a8d19f; }
+  .watched-others { font-size: 10.5px; color: var(--muted-dim); }
+
+  .comment-toggle {
+    display: block; width: 100%; text-align: left; margin-top: 8px; background: none; border: none;
+    color: var(--muted); font-size: 12px; cursor: pointer; padding: 4px 0; font-family: inherit;
+  }
+  .comment-toggle:hover { color: var(--accent-2); }
+  .comment-thread { border-top: 1px solid var(--border-soft); margin-top: 6px; padding-top: 8px; }
+  .comment-list { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .comment-item { font-size: 12px; line-height: 1.4; color: var(--text); }
+  .comment-item .who { color: var(--accent-2); font-weight: 600; margin-right: 4px; }
+  .comment-empty { font-size: 12px; color: var(--muted-dim); font-style: italic; }
+  .comment-loading { font-size: 12px; color: var(--muted-dim); }
+  .comment-input-row { display: flex; gap: 6px; }
+  .comment-input-row input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 10px; border-radius: var(--radius-sm); font-size: 12.5px; font-family: inherit; outline: none;
+  }
+  .comment-input-row input:focus { border-color: var(--accent); }
+  .comment-input-row button {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 7px 12px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600;
+  }
+
+  /* site-wide chat */
+  .chat-panel {
+    position: fixed; top: 0; right: -360px; width: 340px; max-width: 88vw; height: 100%;
+    background: var(--surface-solid); border-left: 1px solid var(--border); z-index: 300;
+    display: flex; flex-direction: column; transition: right .25s ease; box-shadow: -10px 0 30px rgba(0,0,0,0.4);
+  }
+  .chat-panel.open { right: 0; }
+  .chat-header { padding: 16px 18px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; }
+  .chat-header button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; }
+  .chat-header button:hover { color: var(--text); }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .chat-msg { max-width: 85%; }
+  .chat-msg.mine { align-self: flex-end; }
+  .chat-msg .who { font-size: 10.5px; color: var(--accent-2); font-weight: 600; margin-bottom: 3px; }
+  .chat-msg .bubble { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px; padding: 8px 12px; font-size: 13px; line-height: 1.4; word-break: break-word; }
+  .chat-msg.mine .bubble { background: rgba(200,38,44,0.18); border-color: rgba(200,38,44,0.3); }
+  .chat-empty { color: var(--muted-dim); font-size: 12.5px; text-align: center; margin-top: 20px; }
+  .chat-input-row { display: flex; gap: 8px; padding: 14px 16px; border-top: 1px solid var(--border-soft); }
+  .chat-input-row input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: var(--radius-sm); font-size: 13.5px; font-family: inherit; outline: none; }
+  .chat-input-row input:focus { border-color: var(--accent); }
+  .chat-input-row button { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: 9px 14px; cursor: pointer; font-family: inherit; font-weight: 600; }
+  .chat-fab-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2); border: 2px solid var(--bg); display: none; }
+  .chat-fab-dot.show { display: block; }
 
   /* files view */
   .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
@@ -515,7 +578,21 @@
 <!-- sticky meme layer -->
 <div id="memeLayer"></div>
 
+<!-- site-wide chat panel -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-header">
+    <span class="display" style="font-size:18px;">Chat</span>
+    <button onclick="toggleChatPanel()" title="close">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Message..." maxlength="500">
+    <button onclick="submitChatMsg()">Send</button>
+  </div>
+</div>
+
 <div class="fab-stack">
+  <button class="fab-mini" id="chatToggleBtn" onclick="toggleChatPanel()" title="chat" style="position:relative;">💬<span class="chat-fab-dot" id="chatFabDot"></span></button>
   <button class="fab-mini" id="memePopupToggle" onclick="toggleMemePopups()" title="meme popups on/off">🔔</button>
   <button class="fab-mini" id="memeListBtn" onclick="openMemeListModal()" title="see all memes">🗂️</button>
   <button class="fab" id="memeFab" onclick="openAddMemeModal()" title="add a meme">😂</button>
@@ -703,7 +780,7 @@ function buildCatSidebar() {
     <span class="cat-main">All sections</span><span class="n">${state.entries.length}</span></div>`;
   state.categories.forEach(c => {
     html += `<div class="cat-link ${activeCat===c?'active':''}" data-cat="${escapeHtml(c)}">
-      <span class="cat-main">${escapeHtml(c)}<span class="n">${counts[c]||0}</span></span>
+      <span class="cat-main"><span class="grip" title="drag to reorder">⠿</span>${escapeHtml(c)}<span class="n">${counts[c]||0}</span></span>
       <button class="rm" data-rm-cat="${escapeHtml(c)}" title="remove section">✕</button>
     </div>`;
   });
@@ -713,9 +790,55 @@ function setActiveCat(c) { activeCat = c; renderAll(); }
 document.getElementById('catList').addEventListener('click', (e) => {
   const rmBtn = e.target.closest('[data-rm-cat]');
   if (rmBtn) { e.stopPropagation(); removeCategory(rmBtn.dataset.rmCat); return; }
-  const link = e.target.closest('.cat-link');
+  const link = e.target.closest('.cat-link[data-cat]');
   if (link) setActiveCat(link.dataset.cat);
 });
+
+/* drag-to-reorder sections (pointer events = works for mouse + touch) */
+let catDrag = null;
+document.getElementById('catList').addEventListener('pointerdown', (e) => {
+  const grip = e.target.closest('.grip');
+  if (!grip) return;
+  const link = grip.closest('.cat-link[data-cat]');
+  if (!link || link.dataset.cat === 'All') return;
+  e.preventDefault();
+  catDrag = { cat: link.dataset.cat, order: [...state.categories] };
+  link.classList.add('dragging');
+  document.addEventListener('pointermove', onCatDragMove);
+  document.addEventListener('pointerup', onCatDragEnd);
+});
+function onCatDragMove(e) {
+  if (!catDrag) return;
+  const rows = [...document.querySelectorAll('#catList .cat-link[data-cat]')].filter(r => r.dataset.cat !== 'All');
+  const overEl = rows.find(r => {
+    const rect = r.getBoundingClientRect();
+    return e.clientY >= rect.top && e.clientY <= rect.bottom;
+  });
+  if (!overEl) return;
+  const overCat = overEl.dataset.cat;
+  if (overCat === catDrag.cat) return;
+  const order = catDrag.order;
+  const fromIdx = order.indexOf(catDrag.cat);
+  const toIdx = order.indexOf(overCat);
+  if (fromIdx === -1 || toIdx === -1) return;
+  order.splice(fromIdx, 1);
+  order.splice(toIdx, 0, catDrag.cat);
+  state.categories = [...order];
+  buildCatSidebar();
+  const newEl = document.querySelector(`#catList .cat-link[data-cat="${CSS.escape(catDrag.cat)}"]`);
+  if (newEl) newEl.classList.add('dragging');
+}
+async function onCatDragEnd() {
+  document.removeEventListener('pointermove', onCatDragMove);
+  document.removeEventListener('pointerup', onCatDragEnd);
+  if (!catDrag) return;
+  const finalOrder = [...catDrag.order];
+  catDrag = null;
+  document.querySelectorAll('#catList .cat-link.dragging').forEach(el => el.classList.remove('dragging'));
+  try {
+    await db.collection('cutlog_meta').doc('categories').set({ list: finalOrder });
+  } catch (err) { alert("Couldn't save the new order — check your connection."); }
+}
 
 async function removeCategory(c) {
   if (!confirm(`Remove the "${c}" section? Videos already tagged with it will stay searchable, just not listed under it.`)) return;
@@ -773,11 +896,15 @@ function renderReel() {
 }
 function reelCardHtml(e, idx) {
   const thumb = `https://img.youtube.com/vi/${e.videoId}/hqdefault.jpg`;
+  const watchedBy = e.watchedBy || [];
+  const iWatched = watchedBy.includes(currentUser);
+  const others = watchedBy.filter(w => w !== currentUser);
   return `
     <div class="card">
       <a class="thumb-wrap" onclick="event.preventDefault(); openPlayer('${e.videoId}')" href="https://youtube.com/watch?v=${e.videoId}">
         <img src="${thumb}" loading="lazy" alt="video thumbnail">
         <div class="play"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="rgba(0,0,0,0.55)"/><path d="M17 13 L30 22 L17 31 Z" fill="#fff"/></svg></div>
+        ${watchedBy.length ? `<div class="watched-badge">👁 ${watchedBy.length === 1 ? 'seen' : `seen by ${watchedBy.length}`}</div>` : ''}
       </a>
       <div class="card-body">
         <div class="card-note ${e.note ? '' : 'empty'}">${e.note ? escapeHtml(e.note) : 'No note added'}</div>
@@ -785,6 +912,12 @@ function reelCardHtml(e, idx) {
           <span>added by <span class="who">${escapeHtml(e.addedBy)}</span></span>
           <button class="del" onclick="deleteEntry('${e.id}')">remove</button>
         </div>
+        <div class="watched-row">
+          <button class="watched-btn ${iWatched ? 'on' : ''}" onclick="toggleWatched('${e.id}', event)">${iWatched ? '✓ You watched this' : '👁 Mark watched'}</button>
+          ${others.length ? `<span class="watched-others">${escapeHtml(others.join(', '))} watched too</span>` : ''}
+        </div>
+        <button class="comment-toggle" onclick="toggleComments('${e.id}', event)">💬 Comments</button>
+        <div class="comment-thread" id="comments-${e.id}" style="display:none;"></div>
       </div>
     </div>`;
 }
@@ -800,6 +933,66 @@ async function deleteEntry(id) {
   if (!confirm('Remove this clip from the log?')) return;
   try { await db.collection('cutlog_entries').doc(id).delete(); }
   catch (e) { alert("Couldn't delete — check your connection and try again."); }
+}
+async function toggleWatched(id, ev) {
+  if (ev) ev.stopPropagation();
+  const entry = state.entries.find(x => x.id === id);
+  if (!entry) return;
+  const has = (entry.watchedBy || []).includes(currentUser);
+  try {
+    await db.collection('cutlog_entries').doc(id).update({
+      watchedBy: has
+        ? firebase.firestore.FieldValue.arrayRemove(currentUser)
+        : firebase.firestore.FieldValue.arrayUnion(currentUser)
+    });
+  } catch (e) { alert("Couldn't update — check your connection."); }
+}
+
+/* per-video comment threads (subcollection, only listened to while open) */
+let commentUnsubs = {};
+function toggleComments(id, ev) {
+  if (ev) ev.stopPropagation();
+  const box = document.getElementById('comments-' + id);
+  if (!box) return;
+  const isOpen = box.style.display !== 'none';
+  if (isOpen) {
+    box.style.display = 'none';
+    if (commentUnsubs[id]) { commentUnsubs[id](); delete commentUnsubs[id]; }
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = `<div class="comment-loading">loading...</div>`;
+  commentUnsubs[id] = db.collection('cutlog_entries').doc(id).collection('comments')
+    .orderBy('addedAt', 'asc')
+    .onSnapshot((snap) => {
+      renderCommentThread(id, snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, () => { box.innerHTML = `<div class="comment-empty">Couldn't load comments.</div>`; });
+}
+function renderCommentThread(id, comments) {
+  const box = document.getElementById('comments-' + id);
+  if (!box) return;
+  let html = `<div class="comment-list">`;
+  html += comments.length
+    ? comments.map(c => `<div class="comment-item"><span class="who">${escapeHtml(c.addedBy)}</span>${escapeHtml(c.text)}</div>`).join('')
+    : `<div class="comment-empty">No comments yet — say something.</div>`;
+  html += `</div>
+    <div class="comment-input-row">
+      <input type="text" id="cinput-${id}" placeholder="Add a comment..." maxlength="240">
+      <button onclick="submitComment('${id}')">Send</button>
+    </div>`;
+  box.innerHTML = html;
+  document.getElementById('cinput-' + id).addEventListener('keydown', (e) => { if (e.key === 'Enter') submitComment(id); });
+}
+async function submitComment(id) {
+  const input = document.getElementById('cinput-' + id);
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  try {
+    await db.collection('cutlog_entries').doc(id).collection('comments').add({
+      text, addedBy: currentUser, addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { alert("Couldn't post — check your connection."); }
 }
 function openAddModal() {
   document.getElementById('f_url').value = '';
@@ -1156,7 +1349,55 @@ document.getElementById('addFileOverlay').addEventListener('click', (e) => { if 
 document.getElementById('addMemeOverlay').addEventListener('click', (e) => { if (e.target.id === 'addMemeOverlay') closeAddMemeModal(); });
 document.getElementById('memeListOverlay').addEventListener('click', (e) => { if (e.target.id === 'memeListOverlay') closeMemeListModal(); });
 document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); document.getElementById('chatPanel').classList.remove('open'); } });
+
+/* ===================== SITE-WIDE CHAT ===================== */
+let chatMsgs = [];
+let chatUnreadSeen = 0;
+function attachChatListener() {
+  db.collection('we_so_up_chat').orderBy('addedAt', 'asc').limitToLast(150)
+    .onSnapshot((snap) => {
+      chatMsgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const isPanelOpen = document.getElementById('chatPanel').classList.contains('open');
+      if (isPanelOpen) { renderChat(); } else if (chatMsgs.length > chatUnreadSeen) {
+        document.getElementById('chatFabDot').classList.add('show');
+      }
+    }, () => {});
+}
+function toggleChatPanel() {
+  const panel = document.getElementById('chatPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('chatFabDot').classList.remove('show');
+    renderChat();
+    setTimeout(() => document.getElementById('chatInput').focus(), 260);
+  }
+}
+function renderChat() {
+  chatUnreadSeen = chatMsgs.length;
+  const wrap = document.getElementById('chatMessages');
+  const wasNearBottom = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 60;
+  wrap.innerHTML = chatMsgs.length
+    ? chatMsgs.map(m => `
+        <div class="chat-msg ${m.addedBy === currentUser ? 'mine' : ''}">
+          <div class="who">${escapeHtml(m.addedBy)}</div>
+          <div class="bubble">${escapeHtml(m.text)}</div>
+        </div>`).join('')
+    : `<div class="chat-empty">No messages yet — say hi.</div>`;
+  if (wasNearBottom) wrap.scrollTop = wrap.scrollHeight;
+}
+async function submitChatMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  try {
+    await db.collection('we_so_up_chat').add({
+      text, addedBy: currentUser, addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { alert("Couldn't send — check your connection."); }
+}
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitChatMsg(); });
 
 function init() {
   renderQuote();
@@ -1166,6 +1407,7 @@ function init() {
 
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
+  attachChatListener();
 
   db.collection('cutlog_entries').orderBy('addedAt', 'desc').onSnapshot((snap) => {
     state.entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
