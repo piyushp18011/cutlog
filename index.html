@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CUTLOG — shared reference reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase (free, no backend code needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<style>
+  :root {
+    --bg: #14110d;
+    --bg-elevated: #1c1811;
+    --card-bg: #1e1a13;
+    --border: #34301f;
+    --border-soft: #292417;
+    --accent: #e8a33d;
+    --accent-dim: #7a5a24;
+    --text: #f2ece0;
+    --muted: #948a76;
+    --muted-dim: #5f5847;
+    --danger: #c9564a;
+    --sidebar-w: 240px;
+    --radius: 3px;
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--accent); color: #14110d; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; }
+
+  .sprockets {
+    height: 10px;
+    background-image: radial-gradient(circle, var(--bg) 2.2px, transparent 2.3px);
+    background-size: 16px 10px;
+    background-position: 6px center;
+    background-color: var(--accent-dim);
+    opacity: 0.55;
+  }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  aside {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .brand { padding: 22px 20px 14px; border-bottom: 1px solid var(--border); }
+  .brand .display { font-size: 30px; line-height: 1; color: var(--text); }
+  .brand .display span { color: var(--accent); }
+  .brand-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .conn-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--muted-dim); margin-right:5px; }
+  .conn-dot.live { background:#7fbf6b; }
+  .conn-row { font-size: 11px; color: var(--muted); padding: 10px 20px; border-bottom: 1px solid var(--border); }
+  .user-box { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  .user-box .who { color: var(--text); font-weight: 600; font-size: 13px; }
+  .user-box button {
+    background: none; border: none; color: var(--accent); font-size: 11px; cursor: pointer;
+    padding: 0; margin-top: 4px; font-family: inherit; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .cat-heading { font-size: 11px; padding: 16px 20px 8px; margin: 0; color: var(--muted-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .cat-link { display: flex; justify-content: space-between; align-items: center; padding: 9px 20px; cursor: pointer; font-size: 13.5px; color: var(--text); border-left: 3px solid transparent; }
+  .cat-link:hover { background: rgba(232,163,61,0.06); }
+  .cat-link.active { background: rgba(232,163,61,0.1); border-left-color: var(--accent); font-weight: 600; color: var(--accent); }
+  .cat-link .n { color: var(--muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .add-cat-row { padding: 10px 20px 20px; margin-top: auto; }
+  .add-cat-row input {
+    width: 100%; background: var(--bg); border: 1px dashed var(--border); color: var(--text);
+    font-size: 12px; padding: 8px 10px; border-radius: var(--radius); outline: none; font-family: inherit;
+  }
+  .add-cat-row input:focus { border-color: var(--accent); border-style: solid; }
+
+  .content { flex: 1; min-width: 0; }
+  header { position: sticky; top: 0; z-index: 10; background: var(--bg-elevated); border-bottom: 1px solid var(--border); padding: 16px 26px; }
+  .header-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; font-weight: 700; white-space: nowrap; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  #search { flex: 1; min-width: 160px; padding: 9px 13px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13.5px; outline: none; color: var(--text); font-family: inherit; }
+  #search:focus { border-color: var(--accent); }
+  #search::placeholder { color: var(--muted-dim); }
+  .add-btn { background: var(--accent); color: #14110d; border: none; font-weight: 700; font-size: 13px; padding: 9px 16px; border-radius: var(--radius); cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .add-btn:hover { background: #f2b458; }
+  .add-btn:disabled { opacity: 0.5; cursor: default; }
+
+  main { padding: 26px; max-width: 1400px; }
+  .section-heading { display: flex; align-items: baseline; gap: 10px; margin: 30px 0 14px; }
+  .section-heading:first-child { margin-top: 0; }
+  .section-heading .display { font-size: 26px; color: var(--text); }
+  .section-heading .n { font-size: 12px; color: var(--muted-dim); font-family: 'JetBrains Mono', monospace; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; }
+  .card { background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s; }
+  .card:hover { border-color: var(--accent-dim); }
+  .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #0c0a07; cursor: pointer; display: block; }
+  .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-wrap .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0); transition: background .15s; }
+  .thumb-wrap:hover .play { background: rgba(0,0,0,0.25); }
+  .play svg { opacity: 0; transition: opacity .15s; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+  .thumb-wrap:hover .play svg { opacity: 1; }
+  .tc { position: absolute; bottom: 6px; right: 7px; background: rgba(10,8,5,0.82); color: var(--accent); font-size: 10.5px; padding: 2px 5px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; }
+  .card-body { padding: 12px 13px 13px; }
+  .card-note { font-size: 13px; line-height: 1.4; color: var(--text); margin-bottom: 8px; min-height: 1px; }
+  .card-note.empty { color: var(--muted-dim); font-style: italic; }
+  .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
+  .card-meta .who { color: var(--accent); font-weight: 600; }
+  .card-meta .del { background: none; border: none; color: var(--muted-dim); cursor: pointer; font-size: 11px; font-family: inherit; padding: 0; }
+  .card-meta .del:hover { color: var(--danger); }
+
+  .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius); }
+  .empty-state .display { font-size: 22px; color: var(--muted); margin-bottom: 6px; }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(8,6,4,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 460px; padding: 22px; }
+  .modal h2 { margin: 0 0 4px; font-size: 22px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; }
+  .modal .sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field textarea, .field select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: var(--radius); font-size: 13.5px; font-family: inherit; outline: none; resize: vertical; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+  .field textarea { min-height: 60px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+  .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); padding: 9px 15px; border-radius: var(--radius); cursor: pointer; font-family: inherit; font-size: 13px; }
+  .btn-ghost:hover { color: var(--text); }
+  .err { color: var(--danger); font-size: 12px; margin-top: -6px; margin-bottom: 10px; display: none; }
+  .err.show { display: block; }
+
+  .player-overlay { display: none; position: fixed; inset: 0; background: rgba(4,3,2,0.92); z-index: 200; align-items: center; justify-content: center; padding: 30px; }
+  .player-overlay.open { display: flex; }
+  .player-box { width: 100%; max-width: 860px; }
+  .player-box iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius); background: #000; }
+  .player-close { text-align: right; margin-bottom: 8px; }
+  .player-close button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; font-family: inherit; }
+  .player-close button:hover { color: var(--accent); }
+
+  .loading-note { padding: 40px; color: var(--muted); text-align: center; font-size: 13px; }
+  .setup-warning { margin: 40px auto; max-width: 560px; background: #2a1c14; border: 1px solid #5a3a24; border-radius: var(--radius); padding: 20px 24px; color: #f2ece0; font-size: 13.5px; line-height: 1.6; }
+  .setup-warning b { color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .layout { flex-direction: column; }
+    aside { width: 100%; height: auto; position: relative; }
+    main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside>
+    <div class="brand">
+      <div class="display">CUT<span>LOG</span></div>
+      <div class="brand-sub">shared reference reel · edit inspo, sorted by technique</div>
+    </div>
+    <div class="conn-row"><span class="conn-dot" id="connDot"></span><span id="connText">connecting...</span></div>
+    <div class="user-box">
+      logged as <div class="who" id="whoDisplay">—</div>
+      <button onclick="changeUsername()">switch editor</button>
+    </div>
+    <div class="cat-heading">Sections</div>
+    <div id="catList"></div>
+    <div class="add-cat-row">
+      <input id="newCatInput" type="text" placeholder="+ new section (enter)" maxlength="24">
+    </div>
+  </aside>
+
+  <div class="content">
+    <header>
+      <div class="header-row">
+        <h1>Reel Log</h1>
+        <input id="search" type="text" placeholder="Search titles, notes, sections...">
+        <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Paste a link</button>
+      </div>
+    </header>
+    <main id="main">
+      <div class="loading-note">connecting to the reel...</div>
+    </main>
+  </div>
+</div>
+
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <h2>Add to the log</h2>
+    <div class="sub">Paste any YouTube link — we'll pull the thumbnail.</div>
+    <div class="field">
+      <label>YouTube link</label>
+      <input id="f_url" type="text" placeholder="https://youtube.com/watch?v=...">
+    </div>
+    <div class="err" id="f_err">Couldn't find a video in that link — check it's a YouTube URL.</div>
+    <div class="field">
+      <label>Section</label>
+      <select id="f_cat"></select>
+    </div>
+    <div class="field">
+      <label>Note (optional) — what to notice about it</label>
+      <textarea id="f_note" placeholder="e.g. watch the whip pan at 0:14, love the pacing on the drop"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
+      <button class="add-btn" onclick="submitAdd()">Add to reel</button>
+    </div>
+  </div>
+</div>
+
+<div class="player-overlay" id="playerOverlay">
+  <div class="player-box">
+    <div class="player-close"><button onclick="closePlayer()">✕ close</button></div>
+    <iframe id="playerFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   1) PASTE YOUR FIREBASE CONFIG HERE — replace the object below with
+   the one Firebase showed you when you registered your web app.
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDQTc98D2r4IR0_Ixul7wbHpFkEmtxd8B8",
+  authDomain: "cutlog-4d92a.firebaseapp.com",
+  projectId: "cutlog-4d92a",
+  storageBucket: "cutlog-4d92a.firebasestorage.app",
+  messagingSenderId: "860020847082",
+  appId: "1:860020847082:web:f8aff883e697304a31c293"
+};
+/* ===================================================================== */
+
+const isConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+const DEFAULT_CATEGORIES = ['Cuts', 'Pacing', 'Effects', 'Reel Editing'];
+let db = null;
+let state = { entries: [], categories: [...DEFAULT_CATEGORIES] };
+let currentUser = null;
+let activeCat = 'All';
+let searchQuery = '';
+let entriesLoaded = false;
+let categoriesLoaded = false;
+
+function setConn(live, text) {
+  document.getElementById('connDot').classList.toggle('live', live);
+  document.getElementById('connText').textContent = text;
+}
+
+function showConfigWarning() {
+  document.getElementById('main').innerHTML = `
+    <div class="setup-warning">
+      <b>Firebase isn't connected yet.</b><br><br>
+      This page needs your Firebase project details pasted into the
+      <span class="mono">firebaseConfig</span> object near the top of the script
+      (search for "PASTE YOUR FIREBASE CONFIG HERE"). Once that's filled in with
+      your real project's keys and re-uploaded, the reel will load and sync for
+      both of you automatically.
+    </div>`;
+  document.getElementById('addBtn').disabled = true;
+  setConn(false, 'not configured');
+}
+
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const patterns = [
+    /youtube\.com\/watch\?(?:.*&)?v=([a-zA-Z0-9_-]{6,})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{6,})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{6,})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/,
+    /youtube\.com\/live\/([a-zA-Z0-9_-]{6,})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function loadUser() {
+  currentUser = localStorage.getItem('cutlog_username');
+  if (!currentUser) {
+    currentUser = prompt("What's your name? (so your friend knows whose pick it is)");
+    if (!currentUser || !currentUser.trim()) currentUser = 'Editor';
+    currentUser = currentUser.trim().slice(0, 24);
+    localStorage.setItem('cutlog_username', currentUser);
+  }
+  document.getElementById('whoDisplay').textContent = currentUser;
+}
+
+function changeUsername() {
+  const name = prompt("Switch to which name?", currentUser || '');
+  if (name && name.trim()) {
+    currentUser = name.trim().slice(0, 24);
+    document.getElementById('whoDisplay').textContent = currentUser;
+    localStorage.setItem('cutlog_username', currentUser);
+  }
+}
+
+function buildSidebar() {
+  const catList = document.getElementById('catList');
+  const counts = {};
+  state.entries.forEach(e => counts[e.category] = (counts[e.category] || 0) + 1);
+  let html = `<div class="cat-link ${activeCat==='All'?'active':''}" onclick="setActiveCat('All')">
+    <span>All sections</span><span class="n">${state.entries.length}</span></div>`;
+  state.categories.forEach(c => {
+    html += `<div class="cat-link ${activeCat===c?'active':''}" onclick="setActiveCat('${escapeHtml(c)}')">
+      <span>${escapeHtml(c)}</span><span class="n">${counts[c]||0}</span></div>`;
+  });
+  catList.innerHTML = html;
+}
+
+function setActiveCat(c) { activeCat = c; render(); }
+
+function toTC(n) {
+  const h = String(Math.floor(n/3600)).padStart(2,'0');
+  const m = String(Math.floor((n%3600)/60)).padStart(2,'0');
+  const s = String(n%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+
+function render() {
+  if (!entriesLoaded || !categoriesLoaded) return;
+  const main = document.getElementById('main');
+  buildSidebar();
+
+  let list = state.entries;
+  if (activeCat !== 'All') list = list.filter(e => e.category === activeCat);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(e =>
+      (e.note||'').toLowerCase().includes(q) ||
+      (e.category||'').toLowerCase().includes(q) ||
+      (e.addedBy||'').toLowerCase().includes(q) ||
+      (e.url||'').toLowerCase().includes(q)
+    );
+  }
+
+  if (list.length === 0) {
+    main.innerHTML = `<div class="empty-state">
+      <div class="display">Empty reel</div>
+      <div>${state.entries.length===0 ? "Paste your first link to start the log." : "Nothing matches here."}</div>
+    </div>`;
+    return;
+  }
+
+  const groups = {};
+  list.forEach(e => { (groups[e.category] = groups[e.category] || []).push(e); });
+
+  const orderedCats = activeCat !== 'All' ? [activeCat] : state.categories.filter(c => groups[c]);
+  Object.keys(groups).forEach(c => { if (!orderedCats.includes(c)) orderedCats.push(c); });
+
+  let html = '';
+  orderedCats.forEach(cat => {
+    const items = groups[cat];
+    if (!items || !items.length) return;
+    html += `<div class="section-heading"><span class="display">${escapeHtml(cat)}</span><span class="n">${items.length} clip${items.length===1?'':'s'}</span></div>`;
+    html += `<div class="sprockets" style="margin-bottom:14px;"></div>`;
+    html += `<div class="grid">`;
+    items.forEach((e, i) => { html += cardHtml(e, i); });
+    html += `</div>`;
+  });
+  main.innerHTML = html;
+}
+
+function cardHtml(e, idx) {
+  const thumb = `https://img.youtube.com/vi/${e.videoId}/hqdefault.jpg`;
+  return `
+    <div class="card">
+      <a class="thumb-wrap" onclick="event.preventDefault(); openPlayer('${e.videoId}')" href="https://youtube.com/watch?v=${e.videoId}">
+        <img src="${thumb}" loading="lazy" alt="video thumbnail">
+        <div class="play">
+          <svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="23" fill="rgba(20,17,13,0.55)"/><path d="M18 14 L32 23 L18 32 Z" fill="#f2ece0"/></svg>
+        </div>
+        <div class="tc mono">${toTC(idx*37+12)}</div>
+      </a>
+      <div class="card-body">
+        <div class="card-note ${e.note ? '' : 'empty'}">${e.note ? escapeHtml(e.note) : 'No note added'}</div>
+        <div class="card-meta">
+          <span>added by <span class="who">${escapeHtml(e.addedBy)}</span></span>
+          <button class="del" onclick="deleteEntry('${e.id}')">remove</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openPlayer(videoId) {
+  document.getElementById('playerFrame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+  document.getElementById('playerOverlay').classList.add('open');
+}
+function closePlayer() {
+  document.getElementById('playerOverlay').classList.remove('open');
+  document.getElementById('playerFrame').src = '';
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Remove this clip from the log?')) return;
+  try {
+    await db.collection('cutlog_entries').doc(id).delete();
+  } catch (e) {
+    alert("Couldn't delete — check your connection and try again.");
+  }
+}
+
+function openAddModal() {
+  document.getElementById('f_url').value = '';
+  document.getElementById('f_note').value = '';
+  document.getElementById('f_err').classList.remove('show');
+  const sel = document.getElementById('f_cat');
+  sel.innerHTML = state.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if (activeCat !== 'All') sel.value = activeCat;
+  document.getElementById('addOverlay').classList.add('open');
+  document.getElementById('f_url').focus();
+}
+function closeAddModal() { document.getElementById('addOverlay').classList.remove('open'); }
+
+async function submitAdd() {
+  const url = document.getElementById('f_url').value.trim();
+  const videoId = extractYouTubeId(url);
+  const errEl = document.getElementById('f_err');
+  if (!videoId) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  const category = document.getElementById('f_cat').value;
+  const note = document.getElementById('f_note').value.trim();
+
+  try {
+    await db.collection('cutlog_entries').add({
+      url, videoId, category, note,
+      addedBy: currentUser,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeAddModal();
+    activeCat = category;
+  } catch (e) {
+    alert("Couldn't save — check your connection and try again.");
+  }
+}
+
+document.getElementById('newCatInput').addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const val = e.target.value.trim();
+    if (!val) return;
+    if (state.categories.some(c => c.toLowerCase() === val.toLowerCase())) { e.target.value = ''; return; }
+    e.target.value = '';
+    try {
+      await db.collection('cutlog_meta').doc('categories').set(
+        { list: firebase.firestore.FieldValue.arrayUnion(val) }, { merge: true }
+      );
+    } catch (err) {
+      alert("Couldn't save the new section — check your connection.");
+    }
+  }
+});
+
+document.getElementById('search').addEventListener('input', (e) => { searchQuery = e.target.value.trim(); render(); });
+document.getElementById('addOverlay').addEventListener('click', (e) => { if (e.target.id === 'addOverlay') closeAddModal(); });
+document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closePlayer(); } });
+
+function init() {
+  if (!isConfigured) { showConfigWarning(); return; }
+  loadUser();
+
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+
+  // live sync: entries
+  db.collection('cutlog_entries').orderBy('addedAt', 'desc').onSnapshot((snap) => {
+    state.entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    entriesLoaded = true;
+    setConn(true, 'live · synced with Firebase');
+    render();
+  }, (err) => {
+    setConn(false, 'connection error — check your Firestore rules');
+  });
+
+  // live sync: categories
+  const metaRef = db.collection('cutlog_meta').doc('categories');
+  metaRef.onSnapshot((doc) => {
+    if (doc.exists && doc.data().list && doc.data().list.length) {
+      state.categories = doc.data().list;
+    } else {
+      metaRef.set({ list: DEFAULT_CATEGORIES });
+      state.categories = [...DEFAULT_CATEGORIES];
+    }
+    categoriesLoaded = true;
+    render();
+  });
+}
+init();
+</script>
+
+</body>
+</html>
