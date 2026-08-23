@@ -3,197 +3,355 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CUTLOG — shared reference reel</title>
+<title>WE SO UP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:ital,wght@0,400;0,600;1,500;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
-<!-- Firebase (free, no backend code needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
 <style>
   :root {
-    --bg: #14110d;
-    --bg-elevated: #1c1811;
-    --card-bg: #1e1a13;
-    --border: #34301f;
-    --border-soft: #292417;
-    --accent: #e8a33d;
-    --accent-dim: #7a5a24;
-    --text: #f2ece0;
-    --muted: #948a76;
-    --muted-dim: #5f5847;
-    --danger: #c9564a;
-    --sidebar-w: 240px;
-    --radius: 3px;
+    --bg: #0d0b0b;
+    --surface: rgba(24,17,17,0.78);
+    --surface-solid: #181212;
+    --border: #3d2626;
+    --border-soft: #2b1a1a;
+    --text: #f3ece5;
+    --muted: #ab9a94;
+    --muted-dim: #6e5a55;
+    --accent: #c8262c;
+    --accent-strong: #8f171c;
+    --accent-2: #cda335;
+    --accent-3: #e0b23a;
+    --danger: #e2483e;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --sidebar-w: 250px;
   }
   * { box-sizing: border-box; }
-  ::selection { background: var(--accent); color: #14110d; }
+  ::selection { background: var(--accent); color: #fff; }
+  html, body { height: 100%; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(70px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  body::before {
+    width: 520px; height: 520px;
+    background: rgba(200,38,44,0.20);
+    top: -120px; left: -120px;
+  }
+  body::after {
+    width: 460px; height: 460px;
+    background: rgba(205,163,53,0.14);
+    bottom: -100px; right: -80px;
   }
   .mono { font-family: 'JetBrains Mono', monospace; }
-  .display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; }
+  .display { font-family: 'Anton', sans-serif; letter-spacing: 0.02em; }
+  .script { font-family: 'Oswald', sans-serif; font-style: italic; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
 
-  .sprockets {
-    height: 10px;
-    background-image: radial-gradient(circle, var(--bg) 2.2px, transparent 2.3px);
-    background-size: 16px 10px;
-    background-position: 6px center;
-    background-color: var(--accent-dim);
-    opacity: 0.55;
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(246,243,236,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 10px 26px;
+    text-align: center;
   }
+  .quote {
+    font-family: 'Oswald', sans-serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 14.5px;
+    color: var(--accent-strong);
+    max-width: 720px;
+    margin: 0 auto;
+    line-height: 1.4;
+  }
+  .quote span.mark { color: var(--accent-2); font-weight: 700; }
+  .quote-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .quote-edit-btn {
+    flex-shrink: 0; background: none; border: none; color: var(--muted-dim); cursor: pointer;
+    font-size: 12px; padding: 2px 4px; border-radius: 6px; opacity: 0.6; transition: opacity .15s, color .15s;
+  }
+  .quote-edit-btn:hover { opacity: 1; color: var(--accent-strong); background: rgba(200,38,44,0.10); }
 
-  .layout { display: flex; min-height: 100vh; }
+  .site-footer {
+    text-align: center; padding: 22px 16px 30px; font-size: 12px; color: var(--muted-dim);
+    display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  }
+  .site-footer .who { color: var(--accent-2); font-weight: 600; }
+  .footer-edit-btn {
+    background: none; border: none; color: var(--muted-dim); cursor: pointer; font-size: 11px;
+    padding: 2px 4px; opacity: 0.6; transition: opacity .15s, color .15s;
+  }
+  .footer-edit-btn:hover { opacity: 1; color: var(--accent-strong); }
+
+  .layout { display: flex; min-height: calc(100vh - 40px); }
 
   aside {
     width: var(--sidebar-w);
     flex-shrink: 0;
-    background: var(--bg-elevated);
-    border-right: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(14px);
+    border-right: 1px solid var(--border-soft);
     position: sticky;
-    top: 0;
-    height: 100vh;
+    top: 40px;
+    height: calc(100vh - 40px);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
   }
-  .brand { padding: 22px 20px 14px; border-bottom: 1px solid var(--border); }
-  .brand .display { font-size: 30px; line-height: 1; color: var(--text); }
-  .brand .display span { color: var(--accent); }
-  .brand-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
-  .conn-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--muted-dim); margin-right:5px; }
-  .conn-dot.live { background:#7fbf6b; }
-  .conn-row { font-size: 11px; color: var(--muted); padding: 10px 20px; border-bottom: 1px solid var(--border); }
-  .user-box { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
-  .user-box .who { color: var(--text); font-weight: 600; font-size: 13px; }
+  .brand { padding: 24px 22px 16px; border-bottom: 1px solid var(--border-soft); }
+  .brand .display { font-size: 32px; font-weight: 700; line-height: 1; color: var(--text); }
+  .brand .script { font-size: 20px; color: var(--accent-2); margin-top: 2px; display: block; }
+  .conn-row { font-size: 11px; color: var(--muted); padding: 10px 22px; border-bottom: 1px solid var(--border-soft); display:flex; align-items:center; }
+  .conn-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--muted-dim); margin-right:6px; }
+  .conn-dot.live { background:#7fa876; }
+  .user-box { padding: 12px 22px; border-bottom: 1px solid var(--border-soft); font-size: 12px; color: var(--muted); }
+  .user-box .who { color: var(--text); font-weight: 600; font-size: 13.5px; }
   .user-box button {
-    background: none; border: none; color: var(--accent); font-size: 11px; cursor: pointer;
+    background: none; border: none; color: var(--accent-2); font-size: 11px; cursor: pointer;
     padding: 0; margin-top: 4px; font-family: inherit; text-decoration: underline; text-underline-offset: 2px;
   }
-  .cat-heading { font-size: 11px; padding: 16px 20px 8px; margin: 0; color: var(--muted-dim); text-transform: uppercase; letter-spacing: 0.08em; }
-  .cat-link { display: flex; justify-content: space-between; align-items: center; padding: 9px 20px; cursor: pointer; font-size: 13.5px; color: var(--text); border-left: 3px solid transparent; }
-  .cat-link:hover { background: rgba(232,163,61,0.06); }
-  .cat-link.active { background: rgba(232,163,61,0.1); border-left-color: var(--accent); font-weight: 600; color: var(--accent); }
-  .cat-link .n { color: var(--muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
-  .add-cat-row { padding: 10px 20px 20px; margin-top: auto; }
+
+  .tab-switch { display: flex; gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--border-soft); }
+  .tab-btn {
+    flex: 1; text-align: center; padding: 8px 6px; border-radius: var(--radius-sm);
+    font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--muted); background: transparent;
+    border: 1px solid transparent;
+  }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .tab-btn:not(.active):hover { background: var(--border-soft); }
+
+  .cat-heading { font-size: 11px; padding: 16px 22px 8px; margin: 0; color: var(--muted-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .cat-link { display: flex; justify-content: space-between; align-items: center; padding: 9px 22px; cursor: pointer; font-size: 13.5px; color: var(--text); border-left: 3px solid transparent; position: relative; }
+  .cat-link:hover { background: rgba(200,38,44,0.10); }
+  .cat-link.active { background: rgba(200,38,44,0.16); border-left-color: var(--accent); font-weight: 600; color: #e8746f; }
+  .cat-link .n { color: var(--muted); font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-left: 6px; }
+  .cat-link .cat-main { display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cat-link .rm {
+    opacity: 0; background: none; border: none; color: var(--muted-dim); cursor: pointer; font-size: 13px; padding: 0 2px;
+  }
+  .cat-link:hover .rm { opacity: 1; }
+  .cat-link .rm:hover { color: var(--danger); }
+
+  .add-cat-row { padding: 10px 22px 20px; margin-top: auto; }
   .add-cat-row input {
-    width: 100%; background: var(--bg); border: 1px dashed var(--border); color: var(--text);
-    font-size: 12px; padding: 8px 10px; border-radius: var(--radius); outline: none; font-family: inherit;
+    width: 100%; background: var(--surface-solid); border: 1px dashed var(--border); color: var(--text);
+    font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm); outline: none; font-family: inherit;
   }
   .add-cat-row input:focus { border-color: var(--accent); border-style: solid; }
 
   .content { flex: 1; min-width: 0; }
-  header { position: sticky; top: 0; z-index: 10; background: var(--bg-elevated); border-bottom: 1px solid var(--border); padding: 16px 26px; }
+  header { position: sticky; top: 40px; z-index: 10; background: var(--surface); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-soft); padding: 16px 28px; }
   .header-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-  header h1 { font-size: 15px; margin: 0; font-weight: 700; white-space: nowrap; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  #search { flex: 1; min-width: 160px; padding: 9px 13px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13.5px; outline: none; color: var(--text); font-family: inherit; }
+  header h1 { font-size: 14px; margin: 0; font-weight: 700; white-space: nowrap; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  #search { flex: 1; min-width: 160px; padding: 9px 14px; background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13.5px; outline: none; color: var(--text); font-family: inherit; }
   #search:focus { border-color: var(--accent); }
   #search::placeholder { color: var(--muted-dim); }
-  .add-btn { background: var(--accent); color: #14110d; border: none; font-weight: 700; font-size: 13px; padding: 9px 16px; border-radius: var(--radius); cursor: pointer; white-space: nowrap; font-family: inherit; }
-  .add-btn:hover { background: #f2b458; }
-  .add-btn:disabled { opacity: 0.5; cursor: default; }
+  .btn-primary { background: var(--accent); color: #fff; border: none; font-weight: 600; font-size: 13px; padding: 9px 17px; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-primary:disabled { opacity: 0.5; cursor: default; }
 
-  main { padding: 26px; max-width: 1400px; }
+  main { padding: 28px; max-width: 1400px; }
   .section-heading { display: flex; align-items: baseline; gap: 10px; margin: 30px 0 14px; }
   .section-heading:first-child { margin-top: 0; }
-  .section-heading .display { font-size: 26px; color: var(--text); }
+  .section-heading .display { font-size: 24px; font-weight: 600; color: var(--text); }
   .section-heading .n { font-size: 12px; color: var(--muted-dim); font-family: 'JetBrains Mono', monospace; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; }
-  .card { background: var(--card-bg); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: border-color .15s; }
-  .card:hover { border-color: var(--accent-dim); }
-  .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #0c0a07; cursor: pointer; display: block; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+  .card { background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .15s, transform .15s; }
+  .card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.45); transform: translateY(-2px); }
+  .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #241717; cursor: pointer; display: block; }
   .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb-wrap .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0); transition: background .15s; }
-  .thumb-wrap:hover .play { background: rgba(0,0,0,0.25); }
-  .play svg { opacity: 0; transition: opacity .15s; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+  .thumb-wrap:hover .play { background: rgba(0,0,0,0.35); }
+  .play svg { opacity: 0; transition: opacity .15s; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
   .thumb-wrap:hover .play svg { opacity: 1; }
-  .tc { position: absolute; bottom: 6px; right: 7px; background: rgba(10,8,5,0.82); color: var(--accent); font-size: 10.5px; padding: 2px 5px; border-radius: 2px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em; }
-  .card-body { padding: 12px 13px 13px; }
-  .card-note { font-size: 13px; line-height: 1.4; color: var(--text); margin-bottom: 8px; min-height: 1px; }
+  .card-body { padding: 13px 14px 14px; }
+  .card-note { font-size: 13px; line-height: 1.45; color: var(--text); margin-bottom: 8px; min-height: 1px; }
   .card-note.empty { color: var(--muted-dim); font-style: italic; }
   .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
-  .card-meta .who { color: var(--accent); font-weight: 600; }
+  .card-meta .who { color: var(--accent-2); font-weight: 600; }
   .card-meta .del { background: none; border: none; color: var(--muted-dim); cursor: pointer; font-size: 11px; font-family: inherit; padding: 0; }
   .card-meta .del:hover { color: var(--danger); }
 
   .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius); }
   .empty-state .display { font-size: 22px; color: var(--muted); margin-bottom: 6px; }
 
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(8,6,4,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  /* files view */
+  .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+  .type-card {
+    background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    padding: 26px 18px; text-align: center; cursor: pointer; transition: box-shadow .15s, transform .15s;
+  }
+  .type-card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.45); transform: translateY(-2px); }
+  .type-card .icon { font-size: 38px; margin-bottom: 10px; }
+  .type-card .label { font-weight: 600; font-size: 14px; }
+  .type-card .n { color: var(--muted); font-size: 12px; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+  .back-row { margin-bottom: 18px; }
+  .back-btn { background: none; border: none; color: var(--accent-strong); font-weight: 600; cursor: pointer; font-size: 13px; font-family: inherit; padding: 0; }
+  .back-btn:hover { text-decoration: underline; }
+
+  .file-card { background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: var(--radius); overflow: hidden; display:flex; flex-direction:column; }
+  .file-thumb {
+    aspect-ratio: 16/10; display:flex; align-items:center; justify-content:center; text-decoration:none; cursor:pointer;
+    background: linear-gradient(135deg, rgba(200,38,44,0.18), rgba(205,163,53,0.14));
+  }
+  .file-thumb img { width:100%; height:100%; object-fit:cover; }
+  .file-thumb .file-icon { font-size: 44px; }
+  .file-card-body { padding: 12px 14px; }
+  .file-card-body .fname { font-size: 13px; font-weight: 600; color: var(--text); word-break: break-word; }
+  .file-card-body .fmeta { font-size: 11px; color: var(--muted); margin-top: 6px; display:flex; justify-content:space-between; }
+  .file-card-body .del { background:none; border:none; color:var(--muted-dim); cursor:pointer; font-size:11px; font-family:inherit; padding:0; }
+  .file-card-body .del:hover { color: var(--danger); }
+
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
   .overlay.open { display: flex; }
-  .modal { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 460px; padding: 22px; }
-  .modal h2 { margin: 0 0 4px; font-size: 22px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.03em; }
+  .modal { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 460px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.55); }
+  .modal h2 { margin: 0 0 4px; font-size: 24px; font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.02em; }
   .modal .sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
   .field { margin-bottom: 14px; }
   .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; }
-  .field input, .field textarea, .field select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: var(--radius); font-size: 13.5px; font-family: inherit; outline: none; resize: vertical; }
+  .field input, .field textarea, .field select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: var(--radius-sm); font-size: 13.5px; font-family: inherit; outline: none; resize: vertical; }
   .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
   .field textarea { min-height: 60px; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-  .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); padding: 9px 15px; border-radius: var(--radius); cursor: pointer; font-family: inherit; font-size: 13px; }
+  .btn-ghost { background: none; border: 1px solid var(--border); color: var(--muted); padding: 9px 15px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 13px; }
   .btn-ghost:hover { color: var(--text); }
   .err { color: var(--danger); font-size: 12px; margin-top: -6px; margin-bottom: 10px; display: none; }
   .err.show { display: block; }
 
-  .player-overlay { display: none; position: fixed; inset: 0; background: rgba(4,3,2,0.92); z-index: 200; align-items: center; justify-content: center; padding: 30px; }
+  .player-overlay { display: none; position: fixed; inset: 0; background: rgba(20,19,16,0.92); z-index: 200; align-items: center; justify-content: center; padding: 30px; }
   .player-overlay.open { display: flex; }
   .player-box { width: 100%; max-width: 860px; }
   .player-box iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius); background: #000; }
   .player-close { text-align: right; margin-bottom: 8px; }
-  .player-close button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; font-family: inherit; }
-  .player-close button:hover { color: var(--accent); }
+  .player-close button { background: none; border: none; color: #fff; cursor: pointer; font-size: 13px; font-family: inherit; }
+  .player-close button:hover { color: var(--accent-3); }
 
   .loading-note { padding: 40px; color: var(--muted); text-align: center; font-size: 13px; }
-  .setup-warning { margin: 40px auto; max-width: 560px; background: #2a1c14; border: 1px solid #5a3a24; border-radius: var(--radius); padding: 20px 24px; color: #f2ece0; font-size: 13.5px; line-height: 1.6; }
-  .setup-warning b { color: var(--accent); }
+  .setup-warning { margin: 40px auto; max-width: 560px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; color: var(--text); font-size: 13.5px; line-height: 1.6; }
+  .setup-warning b { color: var(--accent-strong); }
+
+  /* sticky meme notes */
+  .meme-note {
+    position: fixed;
+    width: 170px;
+    background: #fffdf6;
+    border: 1px solid rgba(0,0,0,0.45);
+    border-radius: 4px;
+    padding: 10px 10px 12px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    z-index: 150;
+    opacity: 0;
+    transform: scale(0.85) rotate(0deg);
+    transition: opacity .5s ease, transform .5s ease;
+    pointer-events: none;
+    cursor: pointer;
+  }
+  .meme-note.show { opacity: 1; pointer-events: auto; }
+  .meme-note img { width: 100%; border-radius: 3px; display: block; background: #eee; }
+  .meme-note .cap { font-family: 'Oswald', sans-serif; font-style: italic; font-size: 13px; margin-top: 6px; color: #4a4740; text-align: center; line-height: 1.25; }
+  .meme-note .x {
+    position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--danger); color: #fff; border: 2px solid #fffdf6; font-size: 12px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity .15s;
+  }
+  .meme-note:hover .x { opacity: 1; }
+
+  .fab {
+    position: fixed; bottom: 26px; right: 26px; z-index: 60;
+    width: 52px; height: 52px; border-radius: 50%; background: var(--accent-2); color: #fff;
+    border: none; font-size: 22px; cursor: pointer; box-shadow: 0 10px 26px rgba(205,163,53,0.45);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fab:hover { background: #b8901f; }
 
   @media (max-width: 760px) {
     .layout { flex-direction: column; }
-    aside { width: 100%; height: auto; position: relative; }
-    main { padding: 16px; }
+    aside { width: 100%; height: auto; position: relative; top: 0; }
+    header { top: 0; }
+    main { padding: 18px; }
+    .meme-note { width: 130px; }
   }
 </style>
 </head>
 <body>
 
+<div class="topbar">
+  <div class="quote-wrap">
+    <div class="quote" id="quoteBox">loading today's line...</div>
+    <button class="quote-edit-btn" id="quoteEditBtn" onclick="editQuote()" title="edit this quote">✎</button>
+  </div>
+</div>
+
 <div class="layout">
   <aside>
     <div class="brand">
-      <div class="display">CUT<span>LOG</span></div>
-      <div class="brand-sub">shared reference reel · edit inspo, sorted by technique</div>
+      <div class="display">WE SO UP</div>
+      <span class="script">bhai hai tu mera</span>
     </div>
     <div class="conn-row"><span class="conn-dot" id="connDot"></span><span id="connText">connecting...</span></div>
     <div class="user-box">
       logged as <div class="who" id="whoDisplay">—</div>
-      <button onclick="changeUsername()">switch editor</button>
+      <button onclick="changeUsername()">switch</button>
     </div>
-    <div class="cat-heading">Sections</div>
-    <div id="catList"></div>
-    <div class="add-cat-row">
-      <input id="newCatInput" type="text" placeholder="+ new section (enter)" maxlength="24">
+
+    <div class="tab-switch">
+      <div class="tab-btn active" id="tabReelBtn" onclick="setTab('reel')">🎬 Videos</div>
+      <div class="tab-btn" id="tabFilesBtn" onclick="setTab('files')">📁 Files</div>
+    </div>
+
+    <div id="reelSidebar">
+      <div class="cat-heading">Sections</div>
+      <div id="catList"></div>
+      <div class="add-cat-row">
+        <input id="newCatInput" type="text" placeholder="+ new section (enter)" maxlength="24">
+      </div>
+    </div>
+
+    <div id="filesSidebar" style="display:none;">
+      <div class="cat-heading">File types</div>
+      <div id="fileTypeList"></div>
     </div>
   </aside>
 
   <div class="content">
     <header>
-      <div class="header-row">
-        <h1>Reel Log</h1>
+      <div class="header-row" id="reelHeaderRow">
+        <h1>Video Log</h1>
         <input id="search" type="text" placeholder="Search titles, notes, sections...">
-        <button class="add-btn" id="addBtn" onclick="openAddModal()">+ Paste a link</button>
+        <button class="btn-primary" id="addBtn" onclick="openAddModal()">+ Paste a link</button>
+      </div>
+      <div class="header-row" id="filesHeaderRow" style="display:none;">
+        <h1>File Library</h1>
+        <input id="fileSearch" type="text" placeholder="Search files...">
+        <button class="btn-primary" id="addFileBtn" onclick="openAddFileModal()">+ Add file</button>
       </div>
     </header>
     <main id="main">
-      <div class="loading-note">connecting to the reel...</div>
+      <div class="loading-note">connecting...</div>
     </main>
   </div>
 </div>
 
+<!-- add video modal -->
 <div class="overlay" id="addOverlay">
   <div class="modal">
     <h2>Add to the log</h2>
@@ -213,11 +371,58 @@
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
-      <button class="add-btn" onclick="submitAdd()">Add to reel</button>
+      <button class="btn-primary" onclick="submitAdd()">Add to videos</button>
     </div>
   </div>
 </div>
 
+<!-- add file modal -->
+<div class="overlay" id="addFileOverlay">
+  <div class="modal">
+    <h2>Add a file</h2>
+    <div class="sub">Paste any link — Drive, a direct file, whatever.</div>
+    <div class="field">
+      <label>File link</label>
+      <input id="ff_url" type="text" placeholder="https://...">
+    </div>
+    <div class="err" id="ff_err">Add a valid link first.</div>
+    <div class="field">
+      <label>Type</label>
+      <select id="ff_type"></select>
+    </div>
+    <div class="field">
+      <label>Label (optional)</label>
+      <input id="ff_label" type="text" placeholder="what is this file?">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddFileModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitAddFile()">Add file</button>
+    </div>
+  </div>
+</div>
+
+<!-- add meme modal -->
+<div class="overlay" id="addMemeOverlay">
+  <div class="modal">
+    <h2>Drop a meme</h2>
+    <div class="sub">Paste a direct image link — it'll pop up as a sticky note at random.</div>
+    <div class="field">
+      <label>Image link</label>
+      <input id="mm_url" type="text" placeholder="https://...jpg / .png / .gif">
+    </div>
+    <div class="err" id="mm_err">Add an image link first.</div>
+    <div class="field">
+      <label>Caption (optional)</label>
+      <input id="mm_cap" type="text" placeholder="a little caption">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddMemeModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitAddMeme()">Stick it up</button>
+    </div>
+  </div>
+</div>
+
+<!-- video player -->
 <div class="player-overlay" id="playerOverlay">
   <div class="player-box">
     <div class="player-close"><button onclick="closePlayer()">✕ close</button></div>
@@ -225,11 +430,18 @@
   </div>
 </div>
 
+<div class="site-footer">
+  <span class="mono">papa :</span> <span class="who" id="footerName">—</span>
+  <button class="footer-edit-btn" onclick="editFooterName()" title="edit name">✎</button>
+</div>
+
+<!-- sticky meme layer -->
+<div id="memeLayer"></div>
+
+<button class="fab" id="memeFab" onclick="openAddMemeModal()" title="add a meme">😂</button>
+
 <script>
-/* =====================================================================
-   1) PASTE YOUR FIREBASE CONFIG HERE — replace the object below with
-   the one Firebase showed you when you registered your web app.
-   ===================================================================== */
+/* ===================== FIREBASE CONFIG ===================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDQTc98D2r4IR0_Ixul7wbHpFkEmtxd8B8",
   authDomain: "cutlog-4d92a.firebaseapp.com",
@@ -238,18 +450,84 @@ const firebaseConfig = {
   messagingSenderId: "860020847082",
   appId: "1:860020847082:web:f8aff883e697304a31c293"
 };
-/* ===================================================================== */
+/* ============================================================= */
 
 const isConfigured = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
-
 const DEFAULT_CATEGORIES = ['Cuts', 'Pacing', 'Effects', 'Reel Editing'];
+const FILE_TYPES = [
+  { key: 'documents', label: 'Documents', icon: '📄' },
+  { key: 'images', label: 'Images', icon: '🖼️' },
+  { key: 'design', label: 'Design & Project Files', icon: '🎬' },
+  { key: 'archives', label: 'Archives', icon: '🗂️' },
+  { key: 'other', label: 'Links & Other', icon: '🔗' },
+];
+const QUOTES = [
+  "Bhai hai tu mera — ideas can wait, this can't.",
+  "Every great edit starts with two people arguing about the cut.",
+  "Some make friends. We made a whole workflow.",
+  "Bad takes are just good takes that haven't been graded yet.",
+  "Loyalty renders faster than any export.",
+  "We don't do 'good enough' — we do one more pass.",
+  "Half the fun is the group chat, the other half is this.",
+  "Real ones save the raw footage AND the friendship.",
+  "Not every duo needs a plan. We just need a timeline.",
+  "You bring the chaos, I bring the color grade.",
+  "Some things you build alone. This isn't one of them.",
+  "Frame by frame, day by day, bhai by bhai.",
+  "Two brains, one export settings argument.",
+  "This board exists because 'I'll send it later' never works.",
+  "The best cuts happen after midnight and bad decisions.",
+  "We're not organized. We're just annoyingly consistent.",
+  "Nobody explains a transition like your own bhai does.",
+  "Some folders you share. Some you protect with your life. This is both.",
+  "It's not a phase, it's a pipeline.",
+  "We built this so nothing good gets lost in chat scroll.",
+  "Good footage. Better company.",
+  "One link at a time, one banger at a time.",
+  "This is the group project that actually ships.",
+  "Bhai hai tu mera, and so is this shared drive."
+];
+
+function dayOfYear(d) {
+  const start = new Date(d.getFullYear(), 0, 0);
+  const diff = d - start;
+  return Math.floor(diff / 86400000);
+}
+let customQuote = null; // { text } — overrides the daily rotation when set
+function renderQuote() {
+  let text;
+  if (customQuote && customQuote.text) {
+    text = customQuote.text;
+  } else {
+    const idx = dayOfYear(new Date()) % QUOTES.length;
+    text = QUOTES[idx];
+  }
+  document.getElementById('quoteBox').innerHTML = `<span class="mark">“</span>${escapeHtml(text)}<span class="mark">”</span>`;
+}
+async function editQuote() {
+  const current = customQuote && customQuote.text ? customQuote.text : document.getElementById('quoteBox').textContent.replace(/[“”]/g, '').trim();
+  const next = prompt("Edit the quote at the top:", current);
+  if (next === null) return;
+  const trimmed = next.trim();
+  if (!trimmed) return;
+  if (!db) { customQuote = { text: trimmed }; renderQuote(); return; }
+  try {
+    await db.collection('cutlog_meta').doc('quote').set({
+      text: trimmed, updatedBy: currentUser || 'Editor',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { alert("Couldn't save — check your connection."); }
+}
+
 let db = null;
-let state = { entries: [], categories: [...DEFAULT_CATEGORIES] };
+let state = { entries: [], categories: [...DEFAULT_CATEGORIES], files: [], memes: [] };
 let currentUser = null;
+let activeTab = 'reel';
 let activeCat = 'All';
 let searchQuery = '';
-let entriesLoaded = false;
-let categoriesLoaded = false;
+let fileSearchQuery = '';
+let activeFileType = null; // null = show type grid
+let entriesLoaded = false, categoriesLoaded = false, filesLoaded = false, memesLoaded = false;
 
 function setConn(live, text) {
   document.getElementById('connDot').classList.toggle('live', live);
@@ -260,11 +538,7 @@ function showConfigWarning() {
   document.getElementById('main').innerHTML = `
     <div class="setup-warning">
       <b>Firebase isn't connected yet.</b><br><br>
-      This page needs your Firebase project details pasted into the
-      <span class="mono">firebaseConfig</span> object near the top of the script
-      (search for "PASTE YOUR FIREBASE CONFIG HERE"). Once that's filled in with
-      your real project's keys and re-uploaded, the reel will load and sync for
-      both of you automatically.
+      Paste your Firebase project keys into the <span class="mono">firebaseConfig</span> object near the top of the script.
     </div>`;
   document.getElementById('addBtn').disabled = true;
   setConn(false, 'not configured');
@@ -279,13 +553,12 @@ function extractYouTubeId(url) {
     /youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/,
     /youtube\.com\/live\/([a-zA-Z0-9_-]{6,})/,
   ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return m[1];
-  }
+  for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
   return null;
 }
-
+function isImageUrl(url) {
+  return /\.(jpe?g|png|gif|webp|avif)(\?.*)?$/i.test(url || '');
+}
 function escapeHtml(s) {
   return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -293,14 +566,13 @@ function escapeHtml(s) {
 function loadUser() {
   currentUser = localStorage.getItem('cutlog_username');
   if (!currentUser) {
-    currentUser = prompt("What's your name? (so your friend knows whose pick it is)");
+    currentUser = prompt("What's your name? (so your bhai knows whose pick it is)");
     if (!currentUser || !currentUser.trim()) currentUser = 'Editor';
     currentUser = currentUser.trim().slice(0, 24);
     localStorage.setItem('cutlog_username', currentUser);
   }
   document.getElementById('whoDisplay').textContent = currentUser;
 }
-
 function changeUsername() {
   const name = prompt("Switch to which name?", currentUser || '');
   if (name && name.trim()) {
@@ -310,20 +582,63 @@ function changeUsername() {
   }
 }
 
-function buildSidebar() {
+/* ===================== FOOTER CREDIT ("papa : name") ===================== */
+let footerName = '';
+function renderFooterName() {
+  document.getElementById('footerName').textContent = footerName || '—';
+}
+async function editFooterName() {
+  const name = prompt("Name to show as \"papa\":", footerName || '');
+  if (name === null) return;
+  const trimmed = name.trim().slice(0, 40);
+  if (!db) { footerName = trimmed; renderFooterName(); return; }
+  try {
+    await db.collection('cutlog_meta').doc('credit').set({
+      name: trimmed, updatedBy: currentUser || 'Editor',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { alert("Couldn't save — check your connection."); }
+}
+
+/* ===================== TABS ===================== */
+function setTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabReelBtn').classList.toggle('active', tab === 'reel');
+  document.getElementById('tabFilesBtn').classList.toggle('active', tab === 'files');
+  document.getElementById('reelSidebar').style.display = tab === 'reel' ? 'block' : 'none';
+  document.getElementById('filesSidebar').style.display = tab === 'files' ? 'block' : 'none';
+  document.getElementById('reelHeaderRow').style.display = tab === 'reel' ? 'flex' : 'none';
+  document.getElementById('filesHeaderRow').style.display = tab === 'files' ? 'flex' : 'none';
+  if (tab === 'files') activeFileType = null;
+  renderAll();
+}
+
+/* ===================== REEL: sidebar + render ===================== */
+function buildCatSidebar() {
   const catList = document.getElementById('catList');
   const counts = {};
   state.entries.forEach(e => counts[e.category] = (counts[e.category] || 0) + 1);
   let html = `<div class="cat-link ${activeCat==='All'?'active':''}" onclick="setActiveCat('All')">
-    <span>All sections</span><span class="n">${state.entries.length}</span></div>`;
+    <span class="cat-main">All sections</span><span class="n">${state.entries.length}</span></div>`;
   state.categories.forEach(c => {
-    html += `<div class="cat-link ${activeCat===c?'active':''}" onclick="setActiveCat('${escapeHtml(c)}')">
-      <span>${escapeHtml(c)}</span><span class="n">${counts[c]||0}</span></div>`;
+    html += `<div class="cat-link ${activeCat===c?'active':''}">
+      <span class="cat-main" onclick="setActiveCat('${escapeHtml(c)}')">${escapeHtml(c)}<span class="n">${counts[c]||0}</span></span>
+      <button class="rm" onclick="event.stopPropagation(); removeCategory('${escapeHtml(c)}')" title="remove section">✕</button>
+    </div>`;
   });
   catList.innerHTML = html;
 }
+function setActiveCat(c) { activeCat = c; renderAll(); }
 
-function setActiveCat(c) { activeCat = c; render(); }
+async function removeCategory(c) {
+  if (!confirm(`Remove the "${c}" section? Videos already tagged with it will stay searchable, just not listed under it.`)) return;
+  try {
+    await db.collection('cutlog_meta').doc('categories').set(
+      { list: firebase.firestore.FieldValue.arrayRemove(c) }, { merge: true }
+    );
+    if (activeCat === c) activeCat = 'All';
+  } catch (e) { alert("Couldn't remove — check your connection."); }
+}
 
 function toTC(n) {
   const h = String(Math.floor(n/3600)).padStart(2,'0');
@@ -332,11 +647,9 @@ function toTC(n) {
   return `${h}:${m}:${s}`;
 }
 
-function render() {
-  if (!entriesLoaded || !categoriesLoaded) return;
+function renderReel() {
   const main = document.getElementById('main');
-  buildSidebar();
-
+  buildCatSidebar();
   let list = state.entries;
   if (activeCat !== 'All') list = list.filter(e => e.category === activeCat);
   if (searchQuery) {
@@ -348,18 +661,15 @@ function render() {
       (e.url||'').toLowerCase().includes(q)
     );
   }
-
   if (list.length === 0) {
     main.innerHTML = `<div class="empty-state">
-      <div class="display">Empty reel</div>
+      <div class="display">No videos yet</div>
       <div>${state.entries.length===0 ? "Paste your first link to start the log." : "Nothing matches here."}</div>
     </div>`;
     return;
   }
-
   const groups = {};
   list.forEach(e => { (groups[e.category] = groups[e.category] || []).push(e); });
-
   const orderedCats = activeCat !== 'All' ? [activeCat] : state.categories.filter(c => groups[c]);
   Object.keys(groups).forEach(c => { if (!orderedCats.includes(c)) orderedCats.push(c); });
 
@@ -368,24 +678,19 @@ function render() {
     const items = groups[cat];
     if (!items || !items.length) return;
     html += `<div class="section-heading"><span class="display">${escapeHtml(cat)}</span><span class="n">${items.length} clip${items.length===1?'':'s'}</span></div>`;
-    html += `<div class="sprockets" style="margin-bottom:14px;"></div>`;
     html += `<div class="grid">`;
-    items.forEach((e, i) => { html += cardHtml(e, i); });
+    items.forEach((e, i) => { html += reelCardHtml(e, i); });
     html += `</div>`;
   });
   main.innerHTML = html;
 }
-
-function cardHtml(e, idx) {
+function reelCardHtml(e, idx) {
   const thumb = `https://img.youtube.com/vi/${e.videoId}/hqdefault.jpg`;
   return `
     <div class="card">
       <a class="thumb-wrap" onclick="event.preventDefault(); openPlayer('${e.videoId}')" href="https://youtube.com/watch?v=${e.videoId}">
         <img src="${thumb}" loading="lazy" alt="video thumbnail">
-        <div class="play">
-          <svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="23" fill="rgba(20,17,13,0.55)"/><path d="M18 14 L32 23 L18 32 Z" fill="#f2ece0"/></svg>
-        </div>
-        <div class="tc mono">${toTC(idx*37+12)}</div>
+        <div class="play"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="rgba(0,0,0,0.55)"/><path d="M17 13 L30 22 L17 31 Z" fill="#fff"/></svg></div>
       </a>
       <div class="card-body">
         <div class="card-note ${e.note ? '' : 'empty'}">${e.note ? escapeHtml(e.note) : 'No note added'}</div>
@@ -394,10 +699,8 @@ function cardHtml(e, idx) {
           <button class="del" onclick="deleteEntry('${e.id}')">remove</button>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
-
 function openPlayer(videoId) {
   document.getElementById('playerFrame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
   document.getElementById('playerOverlay').classList.add('open');
@@ -406,16 +709,11 @@ function closePlayer() {
   document.getElementById('playerOverlay').classList.remove('open');
   document.getElementById('playerFrame').src = '';
 }
-
 async function deleteEntry(id) {
   if (!confirm('Remove this clip from the log?')) return;
-  try {
-    await db.collection('cutlog_entries').doc(id).delete();
-  } catch (e) {
-    alert("Couldn't delete — check your connection and try again.");
-  }
+  try { await db.collection('cutlog_entries').doc(id).delete(); }
+  catch (e) { alert("Couldn't delete — check your connection and try again."); }
 }
-
 function openAddModal() {
   document.getElementById('f_url').value = '';
   document.getElementById('f_note').value = '';
@@ -427,7 +725,6 @@ function openAddModal() {
   document.getElementById('f_url').focus();
 }
 function closeAddModal() { document.getElementById('addOverlay').classList.remove('open'); }
-
 async function submitAdd() {
   const url = document.getElementById('f_url').value.trim();
   const videoId = extractYouTubeId(url);
@@ -436,20 +733,15 @@ async function submitAdd() {
   errEl.classList.remove('show');
   const category = document.getElementById('f_cat').value;
   const note = document.getElementById('f_note').value.trim();
-
   try {
     await db.collection('cutlog_entries').add({
-      url, videoId, category, note,
-      addedBy: currentUser,
+      url, videoId, category, note, addedBy: currentUser,
       addedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeAddModal();
     activeCat = category;
-  } catch (e) {
-    alert("Couldn't save — check your connection and try again.");
-  }
+  } catch (e) { alert("Couldn't save — check your connection and try again."); }
 }
-
 document.getElementById('newCatInput').addEventListener('keydown', async (e) => {
   if (e.key === 'Enter') {
     const val = e.target.value.trim();
@@ -460,35 +752,248 @@ document.getElementById('newCatInput').addEventListener('keydown', async (e) => 
       await db.collection('cutlog_meta').doc('categories').set(
         { list: firebase.firestore.FieldValue.arrayUnion(val) }, { merge: true }
       );
-    } catch (err) {
-      alert("Couldn't save the new section — check your connection.");
-    }
+    } catch (err) { alert("Couldn't save the new section — check your connection."); }
   }
 });
+document.getElementById('search').addEventListener('input', (e) => { searchQuery = e.target.value.trim(); renderAll(); });
 
-document.getElementById('search').addEventListener('input', (e) => { searchQuery = e.target.value.trim(); render(); });
+/* ===================== FILES ===================== */
+function buildFileTypeSidebar() {
+  const wrap = document.getElementById('fileTypeList');
+  const counts = {};
+  state.files.forEach(f => counts[f.type] = (counts[f.type] || 0) + 1);
+  let html = `<div class="cat-link ${activeFileType===null?'active':''}" onclick="setActiveFileType(null)">
+    <span class="cat-main">All files</span><span class="n">${state.files.length}</span></div>`;
+  FILE_TYPES.forEach(t => {
+    html += `<div class="cat-link ${activeFileType===t.key?'active':''}" onclick="setActiveFileType('${t.key}')">
+      <span class="cat-main">${t.icon} ${t.label}</span><span class="n">${counts[t.key]||0}</span></div>`;
+  });
+  wrap.innerHTML = html;
+}
+function setActiveFileType(key) { activeFileType = key; renderAll(); }
+
+function renderFiles() {
+  const main = document.getElementById('main');
+  buildFileTypeSidebar();
+
+  let list = state.files;
+  if (fileSearchQuery) {
+    const q = fileSearchQuery.toLowerCase();
+    list = list.filter(f => (f.label||'').toLowerCase().includes(q) || (f.url||'').toLowerCase().includes(q));
+  }
+
+  if (activeFileType === null && !fileSearchQuery) {
+    // type grid view
+    const counts = {};
+    state.files.forEach(f => counts[f.type] = (counts[f.type] || 0) + 1);
+    let html = `<div class="section-heading"><span class="display">File Library</span><span class="n">${state.files.length} file${state.files.length===1?'':'s'}</span></div>`;
+    html += `<div class="type-grid">`;
+    FILE_TYPES.forEach(t => {
+      html += `<div class="type-card" onclick="setActiveFileType('${t.key}')">
+        <div class="icon">${t.icon}</div>
+        <div class="label">${t.label}</div>
+        <div class="n">${counts[t.key]||0} file${(counts[t.key]||0)===1?'':'s'}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    if (state.files.length === 0) {
+      html += `<div class="empty-state" style="margin-top:20px;"><div class="display">No files yet</div><div>Add your first file to fill up a folder.</div></div>`;
+    }
+    main.innerHTML = html;
+    return;
+  }
+
+  if (activeFileType !== null) list = list.filter(f => f.type === activeFileType);
+
+  const typeInfo = FILE_TYPES.find(t => t.key === activeFileType);
+  let html = `<div class="back-row"><button class="back-btn" onclick="setActiveFileType(null)">← all file types</button></div>`;
+  html += `<div class="section-heading"><span class="display">${typeInfo ? typeInfo.icon + ' ' + typeInfo.label : 'Search results'}</span><span class="n">${list.length} file${list.length===1?'':'s'}</span></div>`;
+
+  if (list.length === 0) {
+    html += `<div class="empty-state"><div class="display">Nothing here</div><div>Add a file to this folder.</div></div>`;
+    main.innerHTML = html;
+    return;
+  }
+  html += `<div class="grid">`;
+  list.forEach(f => { html += fileCardHtml(f); });
+  html += `</div>`;
+  main.innerHTML = html;
+}
+function fileCardHtml(f) {
+  const info = FILE_TYPES.find(t => t.key === f.type) || FILE_TYPES[FILE_TYPES.length-1];
+  const thumbInner = isImageUrl(f.url)
+    ? `<img src="${f.url}" loading="lazy" alt="${escapeHtml(f.label)}">`
+    : `<div class="file-icon">${info.icon}</div>`;
+  return `
+    <div class="file-card">
+      <a class="file-thumb" href="${f.url}" target="_blank" rel="noopener">${thumbInner}</a>
+      <div class="file-card-body">
+        <div class="fname">${escapeHtml(f.label || f.url)}</div>
+        <div class="fmeta">
+          <span>added by ${escapeHtml(f.addedBy)}</span>
+          <button class="del" onclick="deleteFile('${f.id}')">remove</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function deleteFile(id) {
+  if (!confirm('Remove this file?')) return;
+  try { await db.collection('we_so_up_files').doc(id).delete(); }
+  catch (e) { alert("Couldn't delete — check your connection."); }
+}
+function openAddFileModal() {
+  document.getElementById('ff_url').value = '';
+  document.getElementById('ff_label').value = '';
+  document.getElementById('ff_err').classList.remove('show');
+  const sel = document.getElementById('ff_type');
+  sel.innerHTML = FILE_TYPES.map(t => `<option value="${t.key}">${t.icon} ${t.label}</option>`).join('');
+  if (activeFileType) sel.value = activeFileType;
+  document.getElementById('addFileOverlay').classList.add('open');
+  document.getElementById('ff_url').focus();
+}
+function closeAddFileModal() { document.getElementById('addFileOverlay').classList.remove('open'); }
+async function submitAddFile() {
+  const url = document.getElementById('ff_url').value.trim();
+  const errEl = document.getElementById('ff_err');
+  if (!url || !/^https?:\/\//i.test(url)) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  const type = document.getElementById('ff_type').value;
+  let label = document.getElementById('ff_label').value.trim();
+  if (!label) {
+    try { label = decodeURIComponent(url.split('/').pop().split('?')[0]) || url; } catch(e) { label = url; }
+  }
+  try {
+    await db.collection('we_so_up_files').add({
+      url, type, label, addedBy: currentUser,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeAddFileModal();
+    activeFileType = type;
+  } catch (e) { alert("Couldn't save — check your connection and try again."); }
+}
+document.getElementById('fileSearch').addEventListener('input', (e) => { fileSearchQuery = e.target.value.trim(); renderAll(); });
+
+/* ===================== MEMES (sticky notes) ===================== */
+const MEME_SLOTS = 3;
+let slotTimers = [];
+function openAddMemeModal() {
+  document.getElementById('mm_url').value = '';
+  document.getElementById('mm_cap').value = '';
+  document.getElementById('mm_err').classList.remove('show');
+  document.getElementById('addMemeOverlay').classList.add('open');
+  document.getElementById('mm_url').focus();
+}
+function closeAddMemeModal() { document.getElementById('addMemeOverlay').classList.remove('open'); }
+async function submitAddMeme() {
+  const url = document.getElementById('mm_url').value.trim();
+  const errEl = document.getElementById('mm_err');
+  if (!url || !/^https?:\/\//i.test(url)) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  const caption = document.getElementById('mm_cap').value.trim();
+  try {
+    await db.collection('we_so_up_memes').add({
+      imageUrl: url, caption, addedBy: currentUser,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeAddMemeModal();
+  } catch (e) { alert("Couldn't save — check your connection and try again."); }
+}
+async function deleteMeme(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Delete this meme for good?')) return;
+  try { await db.collection('we_so_up_memes').doc(id).delete(); }
+  catch (e) { alert("Couldn't delete — check your connection."); }
+}
+
+function initMemeSlots() {
+  const layer = document.getElementById('memeLayer');
+  layer.innerHTML = '';
+  slotTimers.forEach(t => clearTimeout(t));
+  slotTimers = [];
+  for (let i = 0; i < MEME_SLOTS; i++) {
+    const el = document.createElement('div');
+    el.className = 'meme-note';
+    el.id = 'meme-slot-' + i;
+    layer.appendChild(el);
+    scheduleSlotShow(i, 800 + i * 2500 + Math.random() * 2000);
+  }
+}
+function scheduleSlotShow(i, delay) {
+  slotTimers[i] = setTimeout(() => showSlot(i), delay);
+}
+function showSlot(i) {
+  if (!state.memes || state.memes.length === 0) { scheduleSlotShow(i, 4000); return; }
+  const el = document.getElementById('meme-slot-' + i);
+  if (!el) return;
+  const meme = state.memes[Math.floor(Math.random() * state.memes.length)];
+  const topPct = 8 + Math.random() * 62;
+  const leftPct = 4 + Math.random() * 74;
+  const rot = (Math.random() * 16 - 8).toFixed(1);
+  el.style.top = topPct + 'vh';
+  el.style.left = leftPct + 'vw';
+  el.innerHTML = `
+    <span class="x" onclick="deleteMeme('${meme.id}', event)">✕</span>
+    <img src="${meme.imageUrl}" alt="meme" loading="lazy">
+    ${meme.caption ? `<div class="cap">${escapeHtml(meme.caption)}</div>` : ''}
+  `;
+  el.onclick = () => hideSlot(i, 300 + Math.random()*3000);
+  requestAnimationFrame(() => {
+    el.style.transform = `scale(1) rotate(${rot}deg)`;
+    el.classList.add('show');
+  });
+  const visibleFor = 5000 + Math.random() * 5000;
+  slotTimers[i] = setTimeout(() => hideSlot(i, 0), visibleFor);
+}
+function hideSlot(i, extraDelay) {
+  const el = document.getElementById('meme-slot-' + i);
+  if (!el) return;
+  clearTimeout(slotTimers[i]);
+  el.classList.remove('show');
+  el.style.transform = 'scale(0.85) rotate(0deg)';
+  const gap = 3000 + Math.random() * 6000 + (extraDelay || 0);
+  slotTimers[i] = setTimeout(() => showSlot(i), gap);
+}
+
+/* ===================== render dispatcher ===================== */
+function renderAll() {
+  if (!entriesLoaded || !categoriesLoaded || !filesLoaded) return;
+  if (activeTab === 'reel') renderReel();
+  else renderFiles();
+}
+
 document.getElementById('addOverlay').addEventListener('click', (e) => { if (e.target.id === 'addOverlay') closeAddModal(); });
+document.getElementById('addFileOverlay').addEventListener('click', (e) => { if (e.target.id === 'addFileOverlay') closeAddFileModal(); });
+document.getElementById('addMemeOverlay').addEventListener('click', (e) => { if (e.target.id === 'addMemeOverlay') closeAddMemeModal(); });
 document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closePlayer(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closePlayer(); } });
 
 function init() {
+  renderQuote();
   if (!isConfigured) { showConfigWarning(); return; }
   loadUser();
 
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
 
-  // live sync: entries
   db.collection('cutlog_entries').orderBy('addedAt', 'desc').onSnapshot((snap) => {
     state.entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     entriesLoaded = true;
-    setConn(true, 'live · synced with Firebase');
-    render();
-  }, (err) => {
-    setConn(false, 'connection error — check your Firestore rules');
+    setConn(true, 'live · synced');
+    renderAll();
+  }, () => setConn(false, 'connection error — check Firestore rules'));
+
+  const quoteRef = db.collection('cutlog_meta').doc('quote');
+  quoteRef.onSnapshot((doc) => {
+    customQuote = (doc.exists && doc.data().text) ? { text: doc.data().text } : null;
+    renderQuote();
   });
 
-  // live sync: categories
+  const creditRef = db.collection('cutlog_meta').doc('credit');
+  creditRef.onSnapshot((doc) => {
+    footerName = (doc.exists && doc.data().name) || '';
+    renderFooterName();
+  });
+
   const metaRef = db.collection('cutlog_meta').doc('categories');
   metaRef.onSnapshot((doc) => {
     if (doc.exists && doc.data().list && doc.data().list.length) {
@@ -498,8 +1003,20 @@ function init() {
       state.categories = [...DEFAULT_CATEGORIES];
     }
     categoriesLoaded = true;
-    render();
+    renderAll();
   });
+
+  db.collection('we_so_up_files').orderBy('addedAt', 'desc').onSnapshot((snap) => {
+    state.files = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    filesLoaded = true;
+    renderAll();
+  }, () => { filesLoaded = true; renderAll(); });
+
+  db.collection('we_so_up_memes').orderBy('addedAt', 'desc').onSnapshot((snap) => {
+    state.memes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    memesLoaded = true;
+    if (slotTimers.length === 0) initMemeSlots();
+  }, () => { memesLoaded = true; });
 }
 init();
 </script>
