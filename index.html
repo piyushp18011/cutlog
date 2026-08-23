@@ -282,6 +282,29 @@
     display: flex; align-items: center; justify-content: center;
   }
   .fab:hover { background: #b8901f; }
+  .fab-stack { position: fixed; bottom: 26px; right: 26px; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .fab-stack .fab { position: static; }
+  .fab-mini {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--surface-solid); color: var(--text);
+    border: 1px solid var(--border); font-size: 15px; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fab-mini:hover { background: var(--border-soft); }
+  .fab-mini.off { opacity: 0.45; }
+
+  .meme-list-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
+    max-height: 380px; overflow-y: auto; margin: 16px 0;
+  }
+  .meme-list-item { position: relative; border-radius: 8px; overflow: hidden; background: var(--surface-solid); border: 1px solid var(--border-soft); }
+  .meme-list-item img { width: 100%; height: 90px; object-fit: cover; display: block; background: #241717; }
+  .meme-list-item .x {
+    position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--danger); color: #fff; border: none; font-size: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .meme-list-item .cap2 { font-size: 10px; padding: 4px 6px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meme-list-empty { grid-column: 1/-1; color: var(--muted-dim); font-size: 13px; padding: 24px 0; text-align: center; }
 
   @media (max-width: 760px) {
     .layout { flex-direction: column; }
@@ -405,12 +428,16 @@
 <div class="overlay" id="addMemeOverlay">
   <div class="modal">
     <h2>Drop a meme</h2>
-    <div class="sub">Paste a direct image link — it'll pop up as a sticky note at random.</div>
+    <div class="sub">Paste a direct image link, or upload a file — it'll pop up as a sticky note at random.</div>
     <div class="field">
       <label>Image link</label>
       <input id="mm_url" type="text" placeholder="https://...jpg / .png / .gif">
     </div>
-    <div class="err" id="mm_err">Add an image link first.</div>
+    <div class="field">
+      <label>...or upload a file</label>
+      <input id="mm_file" type="file" accept="image/*">
+    </div>
+    <div class="err" id="mm_err">Add an image link or upload a file first.</div>
     <div class="field">
       <label>Caption (optional)</label>
       <input id="mm_cap" type="text" placeholder="a little caption">
@@ -418,6 +445,18 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddMemeModal()">Cancel</button>
       <button class="btn-primary" onclick="submitAddMeme()">Stick it up</button>
+    </div>
+  </div>
+</div>
+
+<!-- meme list modal -->
+<div class="overlay" id="memeListOverlay">
+  <div class="modal" style="max-width:560px;">
+    <h2>All memes</h2>
+    <div class="sub">Tap ✕ on any of them to remove it for good.</div>
+    <div class="meme-list-grid" id="memeListGrid"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeMemeListModal()">Close</button>
     </div>
   </div>
 </div>
@@ -438,7 +477,11 @@
 <!-- sticky meme layer -->
 <div id="memeLayer"></div>
 
-<button class="fab" id="memeFab" onclick="openAddMemeModal()" title="add a meme">😂</button>
+<div class="fab-stack">
+  <button class="fab-mini" id="memePopupToggle" onclick="toggleMemePopups()" title="meme popups on/off">🔔</button>
+  <button class="fab-mini" id="memeListBtn" onclick="openMemeListModal()" title="see all memes">🗂️</button>
+  <button class="fab" id="memeFab" onclick="openAddMemeModal()" title="add a meme">😂</button>
+</div>
 
 <script>
 /* ===================== FIREBASE CONFIG ===================== */
@@ -876,23 +919,70 @@ document.getElementById('fileSearch').addEventListener('input', (e) => { fileSea
 /* ===================== MEMES (sticky notes) ===================== */
 const MEME_SLOTS = 3;
 let slotTimers = [];
+let memePopupsEnabled = true;
 function openAddMemeModal() {
   document.getElementById('mm_url').value = '';
+  document.getElementById('mm_file').value = '';
   document.getElementById('mm_cap').value = '';
+  document.getElementById('mm_err').textContent = 'Add an image link or upload a file first.';
   document.getElementById('mm_err').classList.remove('show');
   document.getElementById('addMemeOverlay').classList.add('open');
   document.getElementById('mm_url').focus();
 }
 function closeAddMemeModal() { document.getElementById('addMemeOverlay').classList.remove('open'); }
+function compressImageFile(file, maxDim = 800, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('bad image'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('read failed'));
+    reader.readAsDataURL(file);
+  });
+}
 async function submitAddMeme() {
   const url = document.getElementById('mm_url').value.trim();
+  const fileInput = document.getElementById('mm_file');
+  const file = fileInput.files && fileInput.files[0];
   const errEl = document.getElementById('mm_err');
-  if (!url || !/^https?:\/\//i.test(url)) { errEl.classList.add('show'); return; }
+  if (!url && !file) {
+    errEl.textContent = 'Add an image link or upload a file first.';
+    errEl.classList.add('show'); return;
+  }
+  if (!file && url && !/^https?:\/\//i.test(url)) {
+    errEl.textContent = "That link doesn't look right.";
+    errEl.classList.add('show'); return;
+  }
+  if (file && file.size > 8 * 1024 * 1024) {
+    errEl.textContent = 'That file is too big — keep it under 8MB.';
+    errEl.classList.add('show'); return;
+  }
   errEl.classList.remove('show');
   const caption = document.getElementById('mm_cap').value.trim();
   try {
+    let imageUrl = url;
+    if (file) {
+      imageUrl = await compressImageFile(file);
+      if (imageUrl.length > 900000) {
+        errEl.textContent = 'That image is too large even compressed — try a smaller one.';
+        errEl.classList.add('show'); return;
+      }
+    }
     await db.collection('we_so_up_memes').add({
-      imageUrl: url, caption, addedBy: currentUser,
+      imageUrl, caption, addedBy: currentUser,
       addedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeAddMemeModal();
@@ -903,6 +993,51 @@ async function deleteMeme(id, ev) {
   if (!confirm('Delete this meme for good?')) return;
   try { await db.collection('we_so_up_memes').doc(id).delete(); }
   catch (e) { alert("Couldn't delete — check your connection."); }
+}
+
+/* meme list modal */
+function openMemeListModal() {
+  renderMemeListGrid();
+  document.getElementById('memeListOverlay').classList.add('open');
+}
+function closeMemeListModal() { document.getElementById('memeListOverlay').classList.remove('open'); }
+function renderMemeListGrid() {
+  const grid = document.getElementById('memeListGrid');
+  if (!state.memes || state.memes.length === 0) {
+    grid.innerHTML = `<div class="meme-list-empty">No memes yet.</div>`;
+    return;
+  }
+  grid.innerHTML = state.memes.map(m => `
+    <div class="meme-list-item">
+      <button class="x" onclick="deleteMeme('${m.id}', event)" title="delete">✕</button>
+      <img src="${m.imageUrl}" alt="meme" loading="lazy">
+      ${m.caption ? `<div class="cap2">${escapeHtml(m.caption)}</div>` : ''}
+    </div>`).join('');
+}
+
+/* on/off toggle for random popups */
+function loadMemePopupPref() {
+  const v = localStorage.getItem('cutlog_meme_popups');
+  memePopupsEnabled = v === null ? true : v === '1';
+  updateMemePopupToggleUI();
+}
+function updateMemePopupToggleUI() {
+  const btn = document.getElementById('memePopupToggle');
+  btn.textContent = memePopupsEnabled ? '🔔' : '🔕';
+  btn.title = memePopupsEnabled ? 'meme popups: ON — tap to turn off' : 'meme popups: OFF — tap to turn on';
+  btn.classList.toggle('off', !memePopupsEnabled);
+}
+function toggleMemePopups() {
+  memePopupsEnabled = !memePopupsEnabled;
+  localStorage.setItem('cutlog_meme_popups', memePopupsEnabled ? '1' : '0');
+  updateMemePopupToggleUI();
+  if (memePopupsEnabled) {
+    if (slotTimers.length === 0) initMemeSlots();
+  } else {
+    slotTimers.forEach(t => clearTimeout(t));
+    slotTimers = [];
+    document.getElementById('memeLayer').innerHTML = '';
+  }
 }
 
 function initMemeSlots() {
@@ -922,6 +1057,7 @@ function scheduleSlotShow(i, delay) {
   slotTimers[i] = setTimeout(() => showSlot(i), delay);
 }
 function showSlot(i) {
+  if (!memePopupsEnabled) return;
   if (!state.memes || state.memes.length === 0) { scheduleSlotShow(i, 4000); return; }
   const el = document.getElementById('meme-slot-' + i);
   if (!el) return;
@@ -964,11 +1100,13 @@ function renderAll() {
 document.getElementById('addOverlay').addEventListener('click', (e) => { if (e.target.id === 'addOverlay') closeAddModal(); });
 document.getElementById('addFileOverlay').addEventListener('click', (e) => { if (e.target.id === 'addFileOverlay') closeAddFileModal(); });
 document.getElementById('addMemeOverlay').addEventListener('click', (e) => { if (e.target.id === 'addMemeOverlay') closeAddMemeModal(); });
+document.getElementById('memeListOverlay').addEventListener('click', (e) => { if (e.target.id === 'memeListOverlay') closeMemeListModal(); });
 document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closePlayer(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); } });
 
 function init() {
   renderQuote();
+  loadMemePopupPref();
   if (!isConfigured) { showConfigWarning(); return; }
   loadUser();
 
@@ -1015,7 +1153,8 @@ function init() {
   db.collection('we_so_up_memes').orderBy('addedAt', 'desc').onSnapshot((snap) => {
     state.memes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     memesLoaded = true;
-    if (slotTimers.length === 0) initMemeSlots();
+    if (memePopupsEnabled && slotTimers.length === 0) initMemeSlots();
+    if (document.getElementById('memeListOverlay').classList.contains('open')) renderMemeListGrid();
   }, () => { memesLoaded = true; });
 }
 init();
