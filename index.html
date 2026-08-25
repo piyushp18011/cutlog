@@ -32,6 +32,8 @@
   * { box-sizing: border-box; }
   ::selection { background: var(--accent); color: #fff; }
   html, body { height: 100%; }
+  html, body { cursor: url('data:image/png;base64,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') 4 4, auto; }
+  button, a, .cat-link, .grip, .thumb-wrap, .fab, .fab-mini, .watched-btn, .wstat-row.me, .comment-toggle, input, select, textarea { cursor: url('data:image/png;base64,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') 4 4, pointer; }
   body {
     margin: 0;
     background: var(--bg);
@@ -255,6 +257,25 @@
   .chat-input-row button { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: 9px 14px; cursor: pointer; font-family: inherit; font-weight: 600; }
   .chat-fab-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2); border: 2px solid var(--bg); display: none; }
   .chat-fab-dot.show { display: block; }
+
+  .update-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+  .update-item:last-child { border-bottom: none; }
+  .update-icon { font-size: 17px; flex-shrink: 0; line-height: 1.3; }
+  .update-text { font-size: 12.5px; line-height: 1.45; color: var(--text); }
+  .update-text .who { color: var(--accent-2); font-weight: 600; }
+  .update-text .titlebit { color: var(--muted); font-style: italic; }
+  .update-time { font-size: 10.5px; color: var(--muted-dim); margin-top: 2px; }
+
+  /* watched status list — shows every known friend's watched state */
+  .watched-status { margin-top: 8px; border: 1px solid var(--border-soft); border-radius: var(--radius-sm); overflow: hidden; }
+  .wstat-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; font-size: 12px; background: var(--surface); }
+  .wstat-row + .wstat-row { border-top: 1px solid var(--border-soft); }
+  .wstat-row.me { cursor: pointer; }
+  .wstat-row.me:hover { background: rgba(200,38,44,0.10); }
+  .wstat-name { color: var(--muted); }
+  .wstat-row.me .wstat-name { color: var(--text); font-weight: 600; }
+  .wstat-mark.yes { color: #a8d19f; }
+  .wstat-mark.no { color: var(--muted-dim); }
 
   /* files view */
   .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
@@ -495,7 +516,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddModal()">Cancel</button>
-      <button class="btn-primary" onclick="submitAdd()">Add to videos</button>
+      <button class="btn-primary" id="submitAddBtn" onclick="submitAdd()">Add to videos</button>
     </div>
   </div>
 </div>
@@ -591,7 +612,17 @@
   </div>
 </div>
 
+<!-- updates / activity feed panel -->
+<div class="chat-panel" id="updatesPanel">
+  <div class="chat-header">
+    <span class="display" style="font-size:18px;">Updates</span>
+    <button onclick="toggleUpdatesPanel()" title="close">✕</button>
+  </div>
+  <div class="chat-messages" id="updatesList"></div>
+</div>
+
 <div class="fab-stack">
+  <button class="fab-mini" id="updatesToggleBtn" onclick="toggleUpdatesPanel()" title="updates" style="position:relative;">📣<span class="chat-fab-dot" id="updatesFabDot"></span></button>
   <button class="fab-mini" id="chatToggleBtn" onclick="toggleChatPanel()" title="chat" style="position:relative;">💬<span class="chat-fab-dot" id="chatFabDot"></span></button>
   <button class="fab-mini" id="memePopupToggle" onclick="toggleMemePopups()" title="meme popups on/off">🔔</button>
   <button class="fab-mini" id="memeListBtn" onclick="openMemeListModal()" title="see all memes">🗂️</button>
@@ -730,6 +761,7 @@ function loadUser() {
     localStorage.setItem('cutlog_username', currentUser);
   }
   document.getElementById('whoDisplay').textContent = currentUser;
+  registerKnownUser(currentUser);
 }
 function changeUsername() {
   const name = prompt("Switch to which name?", currentUser || '');
@@ -737,6 +769,7 @@ function changeUsername() {
     currentUser = name.trim().slice(0, 24);
     document.getElementById('whoDisplay').textContent = currentUser;
     localStorage.setItem('cutlog_username', currentUser);
+    registerKnownUser(currentUser);
   }
 }
 
@@ -897,8 +930,15 @@ function renderReel() {
 function reelCardHtml(e, idx) {
   const thumb = `https://img.youtube.com/vi/${e.videoId}/hqdefault.jpg`;
   const watchedBy = e.watchedBy || [];
-  const iWatched = watchedBy.includes(currentUser);
-  const others = watchedBy.filter(w => w !== currentUser);
+  const names = state_knownUsers.length ? state_knownUsers : [currentUser];
+  const wstatRows = names.map(name => {
+    const done = watchedBy.includes(name);
+    const isMe = name === currentUser;
+    return `<div class="wstat-row ${isMe ? 'me' : ''}" ${isMe ? `onclick="toggleWatched('${e.id}', event)"` : ''}>
+      <span class="wstat-name">${isMe ? 'You' : escapeHtml(name)}</span>
+      <span class="wstat-mark ${done ? 'yes' : 'no'}">${done ? '✓ watched' : '○ not yet'}</span>
+    </div>`;
+  }).join('');
   return `
     <div class="card">
       <a class="thumb-wrap" onclick="event.preventDefault(); openPlayer('${e.videoId}')" href="https://youtube.com/watch?v=${e.videoId}">
@@ -907,15 +947,13 @@ function reelCardHtml(e, idx) {
         ${watchedBy.length ? `<div class="watched-badge">👁 ${watchedBy.length === 1 ? 'seen' : `seen by ${watchedBy.length}`}</div>` : ''}
       </a>
       <div class="card-body">
+        ${e.title ? `<div class="card-note" style="font-weight:600; padding-bottom:0;">${escapeHtml(e.title)}</div>` : ''}
         <div class="card-note ${e.note ? '' : 'empty'}">${e.note ? escapeHtml(e.note) : 'No note added'}</div>
         <div class="card-meta">
           <span>added by <span class="who">${escapeHtml(e.addedBy)}</span></span>
           <button class="del" onclick="deleteEntry('${e.id}')">remove</button>
         </div>
-        <div class="watched-row">
-          <button class="watched-btn ${iWatched ? 'on' : ''}" onclick="toggleWatched('${e.id}', event)">${iWatched ? '✓ You watched this' : '👁 Mark watched'}</button>
-          ${others.length ? `<span class="watched-others">${escapeHtml(others.join(', '))} watched too</span>` : ''}
-        </div>
+        <div class="watched-status">${wstatRows}</div>
         <button class="comment-toggle" onclick="toggleComments('${e.id}', event)">💬 Comments</button>
         <div class="comment-thread" id="comments-${e.id}" style="display:none;"></div>
       </div>
@@ -945,6 +983,7 @@ async function toggleWatched(id, ev) {
         ? firebase.firestore.FieldValue.arrayRemove(currentUser)
         : firebase.firestore.FieldValue.arrayUnion(currentUser)
     });
+    if (!has) logUpdate('watched', { title: entry.title || entry.note || 'a video' });
   } catch (e) { alert("Couldn't update — check your connection."); }
 }
 
@@ -992,6 +1031,8 @@ async function submitComment(id) {
     await db.collection('cutlog_entries').doc(id).collection('comments').add({
       text, addedBy: currentUser, addedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    const entry = state.entries.find(x => x.id === id);
+    logUpdate('comment', { title: (entry && (entry.title || entry.note)) || 'a video', text: text.slice(0, 120) });
   } catch (e) { alert("Couldn't post — check your connection."); }
 }
 function openAddModal() {
@@ -1013,14 +1054,20 @@ async function submitAdd() {
   errEl.classList.remove('show');
   const category = document.getElementById('f_cat').value;
   const note = document.getElementById('f_note').value.trim();
+  const btn = document.getElementById('submitAddBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Adding...'; btn.disabled = true;
+  const title = await fetchYouTubeTitle(videoId);
   try {
     await db.collection('cutlog_entries').add({
-      url, videoId, category, note, addedBy: currentUser,
+      url, videoId, category, note, title: title || null, addedBy: currentUser,
       addedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeAddModal();
     activeCat = category;
+    logUpdate('video', { category, title: title || 'a video' });
   } catch (e) { alert("Couldn't save — check your connection and try again."); }
+  btn.textContent = originalLabel; btn.disabled = false;
 }
 document.getElementById('newCatInput').addEventListener('keydown', async (e) => {
   if (e.key === 'Enter') {
@@ -1154,6 +1201,7 @@ async function submitAddFile() {
     });
     closeAddFileModal();
     activeFileType = type;
+    logUpdate('file', { label });
   } catch (e) { alert("Couldn't save — check your connection and try again."); }
 }
 let fileSearchDebounce;
@@ -1349,7 +1397,7 @@ document.getElementById('addFileOverlay').addEventListener('click', (e) => { if 
 document.getElementById('addMemeOverlay').addEventListener('click', (e) => { if (e.target.id === 'addMemeOverlay') closeAddMemeModal(); });
 document.getElementById('memeListOverlay').addEventListener('click', (e) => { if (e.target.id === 'memeListOverlay') closeMemeListModal(); });
 document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); document.getElementById('chatPanel').classList.remove('open'); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); document.getElementById('chatPanel').classList.remove('open'); document.getElementById('updatesPanel').classList.remove('open'); } });
 
 /* ===================== SITE-WIDE CHAT ===================== */
 let chatMsgs = [];
@@ -1399,6 +1447,87 @@ async function submitChatMsg() {
 }
 document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitChatMsg(); });
 
+/* ===================== UPDATES / ACTIVITY FEED ===================== */
+let updateItems = [];
+let updatesUnreadSeen = 0;
+function attachUpdatesListener() {
+  db.collection('we_so_up_updates').orderBy('createdAt', 'desc').limit(60)
+    .onSnapshot((snap) => {
+      updateItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const isOpen = document.getElementById('updatesPanel').classList.contains('open');
+      if (isOpen) { renderUpdates(); } else if (updateItems.length > updatesUnreadSeen) {
+        document.getElementById('updatesFabDot').classList.add('show');
+      }
+    }, () => {});
+}
+function toggleUpdatesPanel() {
+  const panel = document.getElementById('updatesPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('updatesFabDot').classList.remove('show');
+    renderUpdates();
+  }
+}
+function timeAgo(ts) {
+  if (!ts || !ts.toDate) return '';
+  const secs = Math.floor((Date.now() - ts.toDate().getTime()) / 1000);
+  if (secs < 60) return 'just now';
+  if (secs < 3600) return Math.floor(secs / 60) + 'm ago';
+  if (secs < 86400) return Math.floor(secs / 3600) + 'h ago';
+  return Math.floor(secs / 86400) + 'd ago';
+}
+function updateItemHtml(u) {
+  const who = `<span class="who">${escapeHtml(u.by || 'Someone')}</span>`;
+  const title = u.title ? `<span class="titlebit">"${escapeHtml(u.title)}"</span>` : '';
+  let icon = '📝', text = '';
+  if (u.type === 'video') { icon = '🎬'; text = `${who} added a video in <b>${escapeHtml(u.category || '')}</b>: ${title}`; }
+  else if (u.type === 'file') { icon = '📁'; text = `${who} added a file: <span class="titlebit">${escapeHtml(u.label || '')}</span>`; }
+  else if (u.type === 'comment') { icon = '💬'; text = `${who} commented on ${title}: ${escapeHtml(u.text || '')}`; }
+  else if (u.type === 'watched') { icon = '👁'; text = `${who} marked ${title} as watched`; }
+  return `<div class="update-item"><div class="update-icon">${icon}</div><div><div class="update-text">${text}</div><div class="update-time">${timeAgo(u.createdAt)}</div></div></div>`;
+}
+function renderUpdates() {
+  updatesUnreadSeen = updateItems.length;
+  const wrap = document.getElementById('updatesList');
+  wrap.innerHTML = updateItems.length
+    ? updateItems.map(updateItemHtml).join('')
+    : `<div class="chat-empty">No activity yet.</div>`;
+}
+async function logUpdate(type, fields) {
+  try {
+    await db.collection('we_so_up_updates').add({
+      type, by: currentUser, ...fields,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { /* non-critical, don't block the main action */ }
+}
+
+/* ===================== KNOWN USERS (for the watched-by-both list) ===================== */
+let state_knownUsers = [];
+function attachKnownUsersListener() {
+  db.collection('cutlog_meta').doc('known_users').onSnapshot((doc) => {
+    state_knownUsers = (doc.exists && doc.data().list) ? doc.data().list : [];
+    if (currentUser && !state_knownUsers.includes(currentUser)) state_knownUsers = [...state_knownUsers, currentUser];
+    renderAll();
+  }, () => {});
+}
+async function registerKnownUser(name) {
+  try {
+    await db.collection('cutlog_meta').doc('known_users').set({
+      list: firebase.firestore.FieldValue.arrayUnion(name)
+    }, { merge: true });
+  } catch (e) { /* non-critical */ }
+}
+
+/* ===================== YOUTUBE TITLE FETCH (no API key needed) ===================== */
+async function fetchYouTubeTitle(videoId) {
+  try {
+    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent('https://www.youtube.com/watch?v=' + videoId)}&format=json`);
+    const data = await res.json();
+    return data && data.title ? data.title : null;
+  } catch (e) { return null; }
+}
+
 function init() {
   renderQuote();
   loadMemePopupPref();
@@ -1408,6 +1537,8 @@ function init() {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
   attachChatListener();
+  attachUpdatesListener();
+  attachKnownUsersListener();
 
   db.collection('cutlog_entries').orderBy('addedAt', 'desc').onSnapshot((snap) => {
     state.entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
