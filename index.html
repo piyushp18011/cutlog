@@ -208,6 +208,27 @@
   .empty-state { padding: 60px 20px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: var(--radius); }
   .empty-state .display { font-size: 22px; color: var(--muted); margin-bottom: 6px; }
 
+  .platform-picker { display: flex; gap: 8px; }
+  .platform-btn {
+    flex: 1; background: var(--surface-solid); border: 1px solid var(--border); color: var(--muted);
+    padding: 9px 8px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 12.5px;
+  }
+  .platform-btn.active { background: rgba(200,38,44,0.16); border-color: var(--accent); color: var(--text); font-weight: 600; }
+
+  .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .channel-card {
+    background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    padding: 14px 16px; cursor: pointer; transition: box-shadow .15s, transform .15s;
+  }
+  .channel-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.3); transform: translateY(-2px); }
+  .channel-card .ch-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .channel-card .ch-icon { font-size: 18px; }
+  .channel-card .ch-name { font-weight: 600; font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .channel-card .ch-kw { display: inline-block; margin-top: 4px; font-size: 10.5px; color: var(--accent-2); background: rgba(205,163,53,0.12); padding: 2px 8px; border-radius: 20px; }
+  .channel-card .ch-meta { margin-top: 8px; font-size: 11px; color: var(--muted-dim); display:flex; justify-content:space-between; align-items:center; }
+  .channel-card .del { background: none; border: none; color: var(--muted-dim); cursor: pointer; font-size: 10.5px; }
+  .channel-card .del:hover { color: var(--danger); }
+
   .watched-badge {
     position: absolute; top: 8px; left: 8px; background: rgba(20,15,15,0.78); color: var(--text);
     font-size: 10.5px; padding: 4px 8px; border-radius: 20px; font-family: 'JetBrains Mono', monospace;
@@ -470,6 +491,7 @@
     <div class="tab-switch">
       <div class="tab-btn active" id="tabReelBtn" onclick="setTab('reel')">🎬 Videos</div>
       <div class="tab-btn" id="tabFilesBtn" onclick="setTab('files')">📁 Files</div>
+      <div class="tab-btn" id="tabChannelsBtn" onclick="setTab('channels')">📡 Channels</div>
     </div>
 
     <div id="reelSidebar">
@@ -484,6 +506,14 @@
       <div class="cat-heading">File types</div>
       <div id="fileTypeList"></div>
     </div>
+
+    <div id="channelsSidebar" style="display:none;">
+      <div class="cat-heading">Keywords</div>
+      <div id="channelKeywordList"></div>
+      <div class="add-cat-row">
+        <input id="newChannelKeywordInput" type="text" placeholder="+ new keyword (enter)" maxlength="24">
+      </div>
+    </div>
   </aside>
 
   <div class="content">
@@ -497,6 +527,11 @@
         <h1>File Library</h1>
         <input id="fileSearch" type="text" placeholder="Search files...">
         <button class="btn-primary" id="addFileBtn" onclick="openAddFileModal()">+ Add file</button>
+      </div>
+      <div class="header-row" id="channelsHeaderRow" style="display:none;">
+        <h1>Channels</h1>
+        <input id="channelSearch" type="text" placeholder="Search channels...">
+        <button class="btn-primary" id="addChannelBtn" onclick="openAddChannelModal()">+ Add channel</button>
       </div>
     </header>
     <main id="main">
@@ -588,6 +623,56 @@
     <div class="meme-list-grid" id="memeListGrid"></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeMemeListModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- add channel modal -->
+<div class="overlay" id="addChannelOverlay">
+  <div class="modal">
+    <h2>Add a channel</h2>
+    <div class="sub">Paste the channel link — we'll try to auto-fill the name & summary from it.</div>
+    <div class="field">
+      <label>Keyword</label>
+      <select id="ch_keyword"></select>
+    </div>
+    <div class="field">
+      <label>Platform</label>
+      <div class="platform-picker" id="ch_platform_picker">
+        <button type="button" class="platform-btn active" data-platform="youtube" onclick="selectChannelPlatform('youtube')">▶️ YouTube</button>
+        <button type="button" class="platform-btn" data-platform="telegram" onclick="selectChannelPlatform('telegram')">✈️ Telegram</button>
+        <button type="button" class="platform-btn" data-platform="instagram" onclick="selectChannelPlatform('instagram')">📸 Instagram</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Channel link</label>
+      <input id="ch_url" type="text" placeholder="https://..." onblur="autoFetchChannelInfo()">
+    </div>
+    <div class="err" id="ch_err">Add a valid link first.</div>
+    <div class="field">
+      <label>Name <span id="ch_fetch_status" style="font-weight:400; color:var(--muted-dim); font-size:11px;"></span></label>
+      <input id="ch_label" type="text" placeholder="Channel name">
+    </div>
+    <div class="field">
+      <label>Summary (auto-fetched where possible — edit freely)</label>
+      <textarea id="ch_summary" placeholder="What's this channel about?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddChannelModal()">Cancel</button>
+      <button class="btn-primary" id="submitChannelBtn" onclick="submitAddChannel()">Add channel</button>
+    </div>
+  </div>
+</div>
+
+<!-- channel info preview modal -->
+<div class="overlay" id="channelInfoOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h2 id="ci_title">Channel</h2>
+    <div class="sub" id="ci_platform"></div>
+    <div class="field"><div id="ci_summary" style="color:var(--text); font-size:13.5px; line-height:1.5;"></div></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeChannelInfoModal()">Close</button>
+      <a class="btn-primary" id="ci_open_link" href="#" target="_blank" rel="noopener" style="text-decoration:none; display:inline-block; text-align:center;">Open channel</a>
     </div>
   </div>
 </div>
@@ -719,14 +804,16 @@ async function editQuote() {
 }
 
 let db = null;
-let state = { entries: [], categories: [...DEFAULT_CATEGORIES], files: [], memes: [] };
+let state = { entries: [], categories: [...DEFAULT_CATEGORIES], files: [], memes: [], channels: [], channelKeywords: [] };
 let currentUser = null;
 let activeTab = 'reel';
 let activeCat = 'All';
 let searchQuery = '';
 let fileSearchQuery = '';
 let activeFileType = null; // null = show type grid
-let entriesLoaded = false, categoriesLoaded = false, filesLoaded = false, memesLoaded = false;
+let entriesLoaded = false, categoriesLoaded = false, filesLoaded = false, memesLoaded = false, channelsLoaded = false, channelKeywordsLoaded = false;
+let activeChannelKeyword = null;
+let channelPlatformChoice = 'youtube';
 
 function setConn(live, text) {
   document.getElementById('connDot').classList.toggle('live', live);
@@ -806,11 +893,15 @@ function setTab(tab) {
   activeTab = tab;
   document.getElementById('tabReelBtn').classList.toggle('active', tab === 'reel');
   document.getElementById('tabFilesBtn').classList.toggle('active', tab === 'files');
+  document.getElementById('tabChannelsBtn').classList.toggle('active', tab === 'channels');
   document.getElementById('reelSidebar').style.display = tab === 'reel' ? 'block' : 'none';
   document.getElementById('filesSidebar').style.display = tab === 'files' ? 'block' : 'none';
+  document.getElementById('channelsSidebar').style.display = tab === 'channels' ? 'block' : 'none';
   document.getElementById('reelHeaderRow').style.display = tab === 'reel' ? 'flex' : 'none';
   document.getElementById('filesHeaderRow').style.display = tab === 'files' ? 'flex' : 'none';
+  document.getElementById('channelsHeaderRow').style.display = tab === 'channels' ? 'flex' : 'none';
   if (tab === 'files') activeFileType = null;
+  if (tab === 'channels' && !activeChannelKeyword) activeChannelKeyword = 'All';
   renderAll();
 }
 
@@ -1183,6 +1274,229 @@ async function deleteFile(id) {
   try { await db.collection('we_so_up_files').doc(id).delete(); }
   catch (e) { alert("Couldn't delete — check your connection."); }
 }
+
+/* ===================== CHANNELS ===================== */
+const PLATFORM_INFO = {
+  youtube: { icon: '▶️', label: 'YouTube' },
+  telegram: { icon: '✈️', label: 'Telegram' },
+  instagram: { icon: '📸', label: 'Instagram' }
+};
+const DEFAULT_CHANNEL_KEYWORDS = ['Editing Tips', 'Comedy', 'News'];
+
+function buildChannelKeywordSidebar() {
+  const wrap = document.getElementById('channelKeywordList');
+  const counts = {};
+  state.channels.forEach(c => counts[c.keyword] = (counts[c.keyword] || 0) + 1);
+  let html = `<div class="cat-link ${activeChannelKeyword==='All'?'active':''}" data-kw="All">
+    <span class="cat-main">All keywords</span><span class="n">${state.channels.length}</span></div>`;
+  state.channelKeywords.forEach(k => {
+    html += `<div class="cat-link ${activeChannelKeyword===k?'active':''}" data-kw="${escapeHtml(k)}">
+      <span class="cat-main"><span class="grip" title="drag to reorder">⠿</span>${escapeHtml(k)}<span class="n">${counts[k]||0}</span></span>
+      <button class="rm" data-rm-kw="${escapeHtml(k)}" title="remove keyword">✕</button>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+function setActiveChannelKeyword(k) { activeChannelKeyword = k; renderAll(); }
+document.getElementById('channelKeywordList').addEventListener('click', (e) => {
+  const rmBtn = e.target.closest('[data-rm-kw]');
+  if (rmBtn) { e.stopPropagation(); removeChannelKeyword(rmBtn.dataset.rmKw); return; }
+  const link = e.target.closest('.cat-link[data-kw]');
+  if (link) setActiveChannelKeyword(link.dataset.kw);
+});
+async function removeChannelKeyword(k) {
+  if (!confirm(`Remove keyword "${k}"? Channels tagged with it will stay, just untagged from the sidebar.`)) return;
+  const newList = state.channelKeywords.filter(x => x !== k);
+  if (activeChannelKeyword === k) activeChannelKeyword = 'All';
+  try { await db.collection('cutlog_meta').doc('channel_keywords').set({ list: newList }); }
+  catch (e) { alert("Couldn't remove — check your connection."); }
+}
+document.getElementById('newChannelKeywordInput').addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter') return;
+  const val = e.target.value.trim();
+  if (!val) return;
+  if (state.channelKeywords.some(k => k.toLowerCase() === val.toLowerCase())) { e.target.value = ''; return; }
+  e.target.value = '';
+  try {
+    await db.collection('cutlog_meta').doc('channel_keywords').set({
+      list: firebase.firestore.FieldValue.arrayUnion(val)
+    }, { merge: true });
+  } catch (err) { alert("Couldn't add — check your connection."); }
+});
+
+/* drag-to-reorder keywords, same pattern as sections */
+let kwDrag = null;
+document.getElementById('channelKeywordList').addEventListener('pointerdown', (e) => {
+  const grip = e.target.closest('.grip');
+  if (!grip) return;
+  const link = grip.closest('.cat-link[data-kw]');
+  if (!link || link.dataset.kw === 'All') return;
+  e.preventDefault();
+  kwDrag = { kw: link.dataset.kw, order: [...state.channelKeywords] };
+  link.classList.add('dragging');
+  document.addEventListener('pointermove', onKwDragMove);
+  document.addEventListener('pointerup', onKwDragEnd);
+});
+function onKwDragMove(e) {
+  if (!kwDrag) return;
+  const rows = [...document.querySelectorAll('#channelKeywordList .cat-link[data-kw]')].filter(r => r.dataset.kw !== 'All');
+  const overEl = rows.find(r => { const rect = r.getBoundingClientRect(); return e.clientY >= rect.top && e.clientY <= rect.bottom; });
+  if (!overEl) return;
+  const overKw = overEl.dataset.kw;
+  if (overKw === kwDrag.kw) return;
+  const order = kwDrag.order;
+  const fromIdx = order.indexOf(kwDrag.kw), toIdx = order.indexOf(overKw);
+  if (fromIdx === -1 || toIdx === -1) return;
+  order.splice(fromIdx, 1); order.splice(toIdx, 0, kwDrag.kw);
+  state.channelKeywords = [...order];
+  buildChannelKeywordSidebar();
+  const newEl = document.querySelector(`#channelKeywordList .cat-link[data-kw="${CSS.escape(kwDrag.kw)}"]`);
+  if (newEl) newEl.classList.add('dragging');
+}
+async function onKwDragEnd() {
+  document.removeEventListener('pointermove', onKwDragMove);
+  document.removeEventListener('pointerup', onKwDragEnd);
+  if (!kwDrag) return;
+  const finalOrder = [...kwDrag.order];
+  kwDrag = null;
+  document.querySelectorAll('#channelKeywordList .cat-link.dragging').forEach(el => el.classList.remove('dragging'));
+  try { await db.collection('cutlog_meta').doc('channel_keywords').set({ list: finalOrder }); }
+  catch (err) { alert("Couldn't save the new order — check your connection."); }
+}
+
+let channelSearchQuery = '';
+let channelSearchDebounce;
+document.getElementById('channelSearch').addEventListener('input', (e) => {
+  clearTimeout(channelSearchDebounce);
+  const val = e.target.value.trim();
+  channelSearchDebounce = setTimeout(() => { channelSearchQuery = val; renderAll(); }, 180);
+});
+
+function renderChannels() {
+  const main = document.getElementById('main');
+  buildChannelKeywordSidebar();
+  let list = state.channels;
+  if (activeChannelKeyword && activeChannelKeyword !== 'All') list = list.filter(c => c.keyword === activeChannelKeyword);
+  if (channelSearchQuery) {
+    const q = channelSearchQuery.toLowerCase();
+    list = list.filter(c => (c.label||'').toLowerCase().includes(q) || (c.summary||'').toLowerCase().includes(q) || (c.keyword||'').toLowerCase().includes(q));
+  }
+  let html = `<div class="section-heading"><span class="display">${activeChannelKeyword && activeChannelKeyword !== 'All' ? escapeHtml(activeChannelKeyword) : 'All Channels'}</span><span class="n">${list.length} channel${list.length===1?'':'s'}</span></div>`;
+  if (list.length === 0) {
+    html += `<div class="empty-state"><div class="display">No channels here</div><div>Add one with a keyword to sort it into.</div></div>`;
+    main.innerHTML = html;
+    return;
+  }
+  html += `<div class="channel-grid">`;
+  list.forEach(c => { html += channelCardHtml(c); });
+  html += `</div>`;
+  main.innerHTML = html;
+}
+function channelCardHtml(c) {
+  const info = PLATFORM_INFO[c.platform] || { icon: '🔗', label: c.platform };
+  return `
+    <div class="channel-card" onclick="openChannelInfoModal('${c.id}')">
+      <div class="ch-top"><span class="ch-icon">${info.icon}</span><span class="ch-name">${escapeHtml(c.label || 'Untitled channel')}</span></div>
+      <span class="ch-kw">${escapeHtml(c.keyword)}</span>
+      <div class="ch-meta">
+        <span>added by ${escapeHtml(c.addedBy)}</span>
+        <button class="del" onclick="deleteChannel('${c.id}', event)">remove</button>
+      </div>
+    </div>`;
+}
+async function deleteChannel(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Remove this channel?')) return;
+  try { await db.collection('we_so_up_channels').doc(id).delete(); }
+  catch (e) { alert("Couldn't delete — check your connection."); }
+}
+function openChannelInfoModal(id) {
+  const c = state.channels.find(x => x.id === id);
+  if (!c) return;
+  const info = PLATFORM_INFO[c.platform] || { icon: '🔗', label: c.platform };
+  document.getElementById('ci_title').textContent = c.label || 'Untitled channel';
+  document.getElementById('ci_platform').textContent = `${info.icon} ${info.label} · ${c.keyword}`;
+  document.getElementById('ci_summary').textContent = c.summary || 'No summary added yet.';
+  document.getElementById('ci_open_link').href = c.url;
+  document.getElementById('channelInfoOverlay').classList.add('open');
+}
+function closeChannelInfoModal() { document.getElementById('channelInfoOverlay').classList.remove('open'); }
+
+function selectChannelPlatform(p) {
+  channelPlatformChoice = p;
+  document.querySelectorAll('#ch_platform_picker .platform-btn').forEach(b => b.classList.toggle('active', b.dataset.platform === p));
+}
+function openAddChannelModal() {
+  document.getElementById('ch_url').value = '';
+  document.getElementById('ch_label').value = '';
+  document.getElementById('ch_summary').value = '';
+  document.getElementById('ch_fetch_status').textContent = '';
+  document.getElementById('ch_err').classList.remove('show');
+  const sel = document.getElementById('ch_keyword');
+  sel.innerHTML = state.channelKeywords.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
+  if (activeChannelKeyword && activeChannelKeyword !== 'All') sel.value = activeChannelKeyword;
+  selectChannelPlatform('youtube');
+  document.getElementById('addChannelOverlay').classList.add('open');
+  document.getElementById('ch_url').focus();
+}
+function closeAddChannelModal() { document.getElementById('addChannelOverlay').classList.remove('open'); }
+
+/* best-effort auto-fetch: reads the channel's own Open Graph tags (title/description)
+   via a public CORS proxy, since YouTube/Telegram/Instagram don't allow direct
+   cross-origin fetch from the browser. Telegram & YouTube tend to work well;
+   Instagram often blocks it — fields stay editable either way. */
+async function fetchLinkPreview(url) {
+  try {
+    const proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    const res = await fetch(proxied);
+    if (!res.ok) return null;
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const meta = (prop) => {
+      const el = doc.querySelector(`meta[property="${prop}"]`) || doc.querySelector(`meta[name="${prop}"]`);
+      return el ? el.getAttribute('content') : null;
+    };
+    const title = meta('og:title') || (doc.querySelector('title') ? doc.querySelector('title').textContent : null);
+    const description = meta('og:description');
+    return (title || description) ? { title, description } : null;
+  } catch (e) { return null; }
+}
+let channelFetchToken = 0;
+async function autoFetchChannelInfo() {
+  const url = document.getElementById('ch_url').value.trim();
+  if (!url || !/^https?:\/\//i.test(url)) return;
+  const myToken = ++channelFetchToken;
+  const status = document.getElementById('ch_fetch_status');
+  status.textContent = '· fetching info...';
+  const preview = await fetchLinkPreview(url);
+  if (myToken !== channelFetchToken) return; // a newer fetch superseded this one
+  if (preview) {
+    if (preview.title && !document.getElementById('ch_label').value.trim()) document.getElementById('ch_label').value = preview.title;
+    if (preview.description && !document.getElementById('ch_summary').value.trim()) document.getElementById('ch_summary').value = preview.description;
+    status.textContent = '· auto-filled, edit if needed';
+  } else {
+    status.textContent = "· couldn't auto-fetch — fill it in yourself";
+  }
+}
+async function submitAddChannel() {
+  const url = document.getElementById('ch_url').value.trim();
+  const errEl = document.getElementById('ch_err');
+  if (!url || !/^https?:\/\//i.test(url)) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+  const keyword = document.getElementById('ch_keyword').value;
+  if (!keyword) { alert('Add a keyword first.'); return; }
+  const label = document.getElementById('ch_label').value.trim() || url;
+  const summary = document.getElementById('ch_summary').value.trim();
+  try {
+    await db.collection('we_so_up_channels').add({
+      url, keyword, platform: channelPlatformChoice, label, summary, addedBy: currentUser,
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeAddChannelModal();
+    activeChannelKeyword = keyword;
+    logUpdate('channel', { keyword, label });
+  } catch (e) { alert("Couldn't save — check your connection and try again."); }
+}
 function openAddFileModal() {
   document.getElementById('ff_url').value = '';
   document.getElementById('ff_label').value = '';
@@ -1397,9 +1711,10 @@ function hideSlot(i, extraDelay) {
 
 /* ===================== render dispatcher ===================== */
 function renderAll() {
-  if (!entriesLoaded || !categoriesLoaded || !filesLoaded) return;
+  if (!entriesLoaded || !categoriesLoaded || !filesLoaded || !channelsLoaded || !channelKeywordsLoaded) return;
   if (activeTab === 'reel') renderReel();
-  else renderFiles();
+  else if (activeTab === 'files') renderFiles();
+  else renderChannels();
 }
 
 document.getElementById('addOverlay').addEventListener('click', (e) => { if (e.target.id === 'addOverlay') closeAddModal(); });
@@ -1407,7 +1722,9 @@ document.getElementById('addFileOverlay').addEventListener('click', (e) => { if 
 document.getElementById('addMemeOverlay').addEventListener('click', (e) => { if (e.target.id === 'addMemeOverlay') closeAddMemeModal(); });
 document.getElementById('memeListOverlay').addEventListener('click', (e) => { if (e.target.id === 'memeListOverlay') closeMemeListModal(); });
 document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); document.getElementById('chatPanel').classList.remove('open'); document.getElementById('updatesPanel').classList.remove('open'); } });
+document.getElementById('addChannelOverlay').addEventListener('click', (e) => { if (e.target.id === 'addChannelOverlay') closeAddChannelModal(); });
+document.getElementById('channelInfoOverlay').addEventListener('click', (e) => { if (e.target.id === 'channelInfoOverlay') closeChannelInfoModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); closeAddChannelModal(); closeChannelInfoModal(); document.getElementById('chatPanel').classList.remove('open'); document.getElementById('updatesPanel').classList.remove('open'); } });
 
 /* ===================== SITE-WIDE CHAT ===================== */
 let chatMsgs = [];
@@ -1494,6 +1811,7 @@ function updateItemHtml(u) {
   else if (u.type === 'file') { icon = '📁'; text = `${who} added a file: <span class="titlebit">${escapeHtml(u.label || '')}</span>`; }
   else if (u.type === 'comment') { icon = '💬'; text = `${who} commented on ${title}: ${escapeHtml(u.text || '')}`; }
   else if (u.type === 'watched') { icon = '👁'; text = `${who} marked ${title} as watched`; }
+  else if (u.type === 'channel') { icon = '📡'; text = `${who} added a channel in <b>${escapeHtml(u.keyword || '')}</b>: <span class="titlebit">${escapeHtml(u.label || '')}</span>`; }
   return `<div class="update-item"><div class="update-icon">${icon}</div><div><div class="update-text">${text}</div><div class="update-time">${timeAgo(u.createdAt)}</div></div></div>`;
 }
 function renderUpdates() {
@@ -1611,6 +1929,24 @@ function init() {
     if (memePopupsEnabled && slotTimers.length === 0) initMemeSlots();
     if (document.getElementById('memeListOverlay').classList.contains('open')) renderMemeListGrid();
   }, () => { memesLoaded = true; });
+
+  db.collection('we_so_up_channels').orderBy('addedAt', 'desc').onSnapshot((snap) => {
+    state.channels = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    channelsLoaded = true;
+    renderAll();
+  }, () => { channelsLoaded = true; renderAll(); });
+
+  const channelKwRef = db.collection('cutlog_meta').doc('channel_keywords');
+  channelKwRef.onSnapshot((doc) => {
+    if (doc.exists && doc.data().list && doc.data().list.length) {
+      state.channelKeywords = doc.data().list;
+    } else {
+      channelKwRef.set({ list: DEFAULT_CHANNEL_KEYWORDS });
+      state.channelKeywords = [...DEFAULT_CHANNEL_KEYWORDS];
+    }
+    channelKeywordsLoaded = true;
+    renderAll();
+  });
 }
 init();
 </script>
