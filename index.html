@@ -193,6 +193,11 @@
   .card:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.45); transform: translateY(-2px); }
   .thumb-wrap { position: relative; aspect-ratio: 16/9; background: #241717; cursor: pointer; display: block; }
   .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-wrap.thumb-fallback { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2a1a1a, #1a1212); }
+  .thumb-platform-badge {
+    position: absolute; bottom: 8px; right: 8px; background: rgba(20,15,15,0.82); color: var(--text);
+    font-size: 11px; padding: 4px 9px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; z-index: 2;
+  }
   .thumb-wrap .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0); transition: background .15s; }
   .thumb-wrap:hover .play { background: rgba(0,0,0,0.35); }
   .play svg { opacity: 0; transition: opacity .15s; filter: drop-shadow(0 2px 6px rgba(0,0,0,.35)); }
@@ -544,12 +549,20 @@
 <div class="overlay" id="addOverlay">
   <div class="modal">
     <h2>Add to the log</h2>
-    <div class="sub">Paste any YouTube link — we'll pull the thumbnail.</div>
+    <div class="sub">Paste a YouTube, Telegram, or Instagram link — we'll try to pull the thumbnail.</div>
     <div class="field">
-      <label>YouTube link</label>
+      <label>Platform</label>
+      <div class="platform-picker" id="f_platform_picker">
+        <button type="button" class="platform-btn active" data-platform="youtube" onclick="selectAddPlatform('youtube')">▶️ YouTube</button>
+        <button type="button" class="platform-btn" data-platform="telegram" onclick="selectAddPlatform('telegram')">✈️ Telegram</button>
+        <button type="button" class="platform-btn" data-platform="instagram" onclick="selectAddPlatform('instagram')">📸 Instagram</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Link</label>
       <input id="f_url" type="text" placeholder="https://youtube.com/watch?v=...">
     </div>
-    <div class="err" id="f_err">Couldn't find a video in that link — check it's a YouTube URL.</div>
+    <div class="err" id="f_err">Couldn't find a video in that link — check the URL and platform.</div>
     <div class="field">
       <label>Section</label>
       <select id="f_cat"></select>
@@ -842,6 +855,13 @@ function extractYouTubeId(url) {
   for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
   return null;
 }
+function detectLinkPlatform(url) {
+  if (!url) return null;
+  if (extractYouTubeId(url)) return 'youtube';
+  if (/(^|\.)t\.me\//i.test(url) || /telegram\.me\//i.test(url)) return 'telegram';
+  if (/instagram\.com\//i.test(url)) return 'instagram';
+  return null;
+}
 function isImageUrl(url) {
   return /\.(jpe?g|png|gif|webp|avif)(\?.*)?$/i.test(url || '');
 }
@@ -1029,7 +1049,7 @@ function renderReel() {
   main.innerHTML = html;
 }
 function reelCardHtml(e, idx) {
-  const thumb = `https://img.youtube.com/vi/${e.videoId}/hqdefault.jpg`;
+  const platform = e.platform || 'youtube';
   const watchedBy = e.watchedBy || [];
   const names = state_knownUsers.length ? state_knownUsers : [currentUser];
   const wstatRows = names.map(name => {
@@ -1040,13 +1060,32 @@ function reelCardHtml(e, idx) {
       <span class="wstat-mark ${done ? 'yes' : 'no'}">${done ? '✓ watched' : '○ not yet'}</span>
     </div>`;
   }).join('');
-  return `
-    <div class="card">
+
+  let thumbHtml;
+  if (platform === 'youtube') {
+    const thumb = `https://img.youtube.com/vi/${e.videoId}/hqdefault.jpg`;
+    thumbHtml = `
       <a class="thumb-wrap" onclick="event.preventDefault(); openPlayer('${e.videoId}')" href="https://youtube.com/watch?v=${e.videoId}">
         <img src="${thumb}" loading="lazy" alt="video thumbnail">
         <div class="play"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="rgba(0,0,0,0.55)"/><path d="M17 13 L30 22 L17 31 Z" fill="#fff"/></svg></div>
         ${watchedBy.length ? `<div class="watched-badge">👁 ${watchedBy.length === 1 ? 'seen' : `seen by ${watchedBy.length}`}</div>` : ''}
-      </a>
+      </a>`;
+  } else {
+    const info = PLATFORM_INFO[platform] || { icon: '🔗', label: platform };
+    thumbHtml = `
+      <a class="thumb-wrap" href="${e.url}" target="_blank" rel="noopener">
+        ${e.imageUrl
+          ? `<img src="${e.imageUrl}" loading="lazy" alt="post thumbnail" onerror="this.parentElement.classList.add('thumb-fallback'); this.remove();">`
+          : ''}
+        <div class="thumb-platform-badge">${info.icon} ${info.label}</div>
+        <div class="play"><svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="rgba(0,0,0,0.55)"/><path d="M17 13 L30 22 L17 31 Z" fill="#fff"/></svg></div>
+        ${watchedBy.length ? `<div class="watched-badge">👁 ${watchedBy.length === 1 ? 'seen' : `seen by ${watchedBy.length}`}</div>` : ''}
+      </a>`;
+  }
+
+  return `
+    <div class="card">
+      ${thumbHtml}
       <div class="card-body">
         ${e.title ? `<div class="card-note" style="font-weight:600; padding-bottom:0;">${escapeHtml(e.title)}</div>` : ''}
         <div class="card-note ${e.note ? '' : 'empty'}">${e.note ? escapeHtml(e.note) : 'No note added'}</div>
@@ -1136,6 +1175,18 @@ async function submitComment(id) {
     logUpdate('comment', { title: (entry && (entry.title || entry.note)) || 'a video', text: text.slice(0, 120) });
   } catch (e) { alert("Couldn't post — check your connection."); }
 }
+let addPlatformChoice = 'youtube';
+function selectAddPlatform(p) {
+  addPlatformChoice = p;
+  document.querySelectorAll('#f_platform_picker .platform-btn').forEach(b => b.classList.toggle('active', b.dataset.platform === p));
+  const url = document.getElementById('f_url');
+  const placeholders = {
+    youtube: 'https://youtube.com/watch?v=...',
+    telegram: 'https://t.me/channelname/123',
+    instagram: 'https://instagram.com/p/...'
+  };
+  url.placeholder = placeholders[p] || 'https://...';
+}
 function openAddModal() {
   document.getElementById('f_url').value = '';
   document.getElementById('f_note').value = '';
@@ -1143,30 +1194,55 @@ function openAddModal() {
   const sel = document.getElementById('f_cat');
   sel.innerHTML = state.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   if (activeCat !== 'All') sel.value = activeCat;
+  selectAddPlatform('youtube');
   document.getElementById('addOverlay').classList.add('open');
   document.getElementById('f_url').focus();
 }
 function closeAddModal() { document.getElementById('addOverlay').classList.remove('open'); }
 async function submitAdd() {
   const url = document.getElementById('f_url').value.trim();
-  const videoId = extractYouTubeId(url);
   const errEl = document.getElementById('f_err');
-  if (!videoId) { errEl.classList.add('show'); return; }
-  errEl.classList.remove('show');
   const category = document.getElementById('f_cat').value;
   const note = document.getElementById('f_note').value.trim();
   const btn = document.getElementById('submitAddBtn');
   const originalLabel = btn.textContent;
+
+  if (!url || !/^https?:\/\//i.test(url)) { errEl.textContent = "That link doesn't look right."; errEl.classList.add('show'); return; }
+
+  if (addPlatformChoice === 'youtube') {
+    const videoId = extractYouTubeId(url);
+    if (!videoId) { errEl.textContent = "Couldn't find a video in that link — check it's a YouTube URL."; errEl.classList.add('show'); return; }
+    errEl.classList.remove('show');
+    btn.textContent = 'Adding...'; btn.disabled = true;
+    const title = await fetchYouTubeTitle(videoId);
+    try {
+      await db.collection('cutlog_entries').add({
+        url, videoId, platform: 'youtube', category, note, title: title || null, addedBy: currentUser,
+        addedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      closeAddModal();
+      activeCat = category;
+      logUpdate('video', { category, title: title || 'a video' });
+    } catch (e) { alert("Couldn't save — check your connection and try again."); }
+    btn.textContent = originalLabel; btn.disabled = false;
+    return;
+  }
+
+  // telegram / instagram — best-effort thumbnail via og:image, always allowed to save even if fetch fails
+  errEl.classList.remove('show');
   btn.textContent = 'Adding...'; btn.disabled = true;
-  const title = await fetchYouTubeTitle(videoId);
+  const preview = await fetchLinkPreview(url);
   try {
     await db.collection('cutlog_entries').add({
-      url, videoId, category, note, title: title || null, addedBy: currentUser,
+      url, videoId: null, platform: addPlatformChoice, category, note,
+      title: (preview && preview.title) || null,
+      imageUrl: (preview && preview.image) || null,
+      addedBy: currentUser,
       addedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeAddModal();
     activeCat = category;
-    logUpdate('video', { category, title: title || 'a video' });
+    logUpdate('video', { category, title: (preview && preview.title) || 'a video' });
   } catch (e) { alert("Couldn't save — check your connection and try again."); }
   btn.textContent = originalLabel; btn.disabled = false;
 }
@@ -1458,7 +1534,8 @@ async function fetchLinkPreview(url) {
     };
     const title = meta('og:title') || (doc.querySelector('title') ? doc.querySelector('title').textContent : null);
     const description = meta('og:description');
-    return (title || description) ? { title, description } : null;
+    const image = meta('og:image') || meta('twitter:image');
+    return (title || description || image) ? { title, description, image } : null;
   } catch (e) { return null; }
 }
 let channelFetchToken = 0;
