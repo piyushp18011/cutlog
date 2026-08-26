@@ -463,6 +463,20 @@
   .meme-list-item .cap2 { font-size: 10px; padding: 4px 6px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .meme-list-empty { grid-column: 1/-1; color: var(--muted-dim); font-size: 13px; padding: 24px 0; text-align: center; }
 
+  .known-users-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; max-height: 320px; overflow-y: auto; }
+  .known-user-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--surface-solid); border: 1px solid var(--border-soft); border-radius: 8px; padding: 10px 12px;
+  }
+  .known-user-row .name { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .known-user-row .name.me { color: var(--accent-2); font-weight: 600; }
+  .known-user-row .remove-user-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted); font-size: 12px;
+    padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  }
+  .known-user-row .remove-user-btn:hover { border-color: var(--danger); color: var(--danger); }
+  .known-users-empty { color: var(--muted-dim); font-size: 13px; padding: 12px 0; text-align: center; }
+
   @media (max-width: 760px) {
     .layout { flex-direction: column; }
     aside { width: 100%; height: auto; position: relative; top: 0; }
@@ -491,6 +505,7 @@
     <div class="user-box">
       logged as <div class="who" id="whoDisplay">—</div>
       <button onclick="changeUsername()">switch</button>
+      <button onclick="openSettingsModal()" title="settings">⚙️</button>
     </div>
 
     <div class="tab-switch">
@@ -636,6 +651,21 @@
     <div class="meme-list-grid" id="memeListGrid"></div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeMemeListModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- settings modal -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <h2>Settings</h2>
+    <div class="sub">Manage who shows up in the watched-by list.</div>
+    <div class="field">
+      <label>Known users</label>
+      <div id="knownUsersList" class="known-users-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeSettingsModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1798,10 +1828,11 @@ document.getElementById('addOverlay').addEventListener('click', (e) => { if (e.t
 document.getElementById('addFileOverlay').addEventListener('click', (e) => { if (e.target.id === 'addFileOverlay') closeAddFileModal(); });
 document.getElementById('addMemeOverlay').addEventListener('click', (e) => { if (e.target.id === 'addMemeOverlay') closeAddMemeModal(); });
 document.getElementById('memeListOverlay').addEventListener('click', (e) => { if (e.target.id === 'memeListOverlay') closeMemeListModal(); });
+document.getElementById('settingsOverlay').addEventListener('click', (e) => { if (e.target.id === 'settingsOverlay') closeSettingsModal(); });
 document.getElementById('playerOverlay').addEventListener('click', (e) => { if (e.target.id === 'playerOverlay') closePlayer(); });
 document.getElementById('addChannelOverlay').addEventListener('click', (e) => { if (e.target.id === 'addChannelOverlay') closeAddChannelModal(); });
 document.getElementById('channelInfoOverlay').addEventListener('click', (e) => { if (e.target.id === 'channelInfoOverlay') closeChannelInfoModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closePlayer(); closeAddChannelModal(); closeChannelInfoModal(); document.getElementById('chatPanel').classList.remove('open'); document.getElementById('updatesPanel').classList.remove('open'); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAddModal(); closeAddFileModal(); closeAddMemeModal(); closeMemeListModal(); closeSettingsModal(); closePlayer(); closeAddChannelModal(); closeChannelInfoModal(); document.getElementById('chatPanel').classList.remove('open'); document.getElementById('updatesPanel').classList.remove('open'); } });
 
 /* ===================== SITE-WIDE CHAT ===================== */
 let chatMsgs = [];
@@ -1914,6 +1945,7 @@ function attachKnownUsersListener() {
     state_knownUsers = (doc.exists && doc.data().list) ? doc.data().list : [];
     if (currentUser && !state_knownUsers.includes(currentUser)) state_knownUsers = [...state_knownUsers, currentUser];
     renderAll();
+    if (document.getElementById('settingsOverlay').classList.contains('open')) renderKnownUsersList();
   }, () => {});
 }
 async function registerKnownUser(name) {
@@ -1922,6 +1954,33 @@ async function registerKnownUser(name) {
       list: firebase.firestore.FieldValue.arrayUnion(name)
     }, { merge: true });
   } catch (e) { /* non-critical */ }
+}
+
+/* ===================== SETTINGS (manage known users) ===================== */
+function openSettingsModal() {
+  renderKnownUsersList();
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettingsModal() { document.getElementById('settingsOverlay').classList.remove('open'); }
+function renderKnownUsersList() {
+  const box = document.getElementById('knownUsersList');
+  if (!state_knownUsers.length) {
+    box.innerHTML = `<div class="known-users-empty">No one logged in yet.</div>`;
+    return;
+  }
+  box.innerHTML = state_knownUsers.map(name => `
+    <div class="known-user-row">
+      <span class="name ${name === currentUser ? 'me' : ''}">${escapeHtml(name)}${name === currentUser ? ' (you)' : ''}</span>
+      <button class="remove-user-btn" onclick="removeKnownUser('${escapeHtml(name).replace(/'/g, "\\'")}')">remove</button>
+    </div>`).join('');
+}
+async function removeKnownUser(name) {
+  if (!confirm(`Remove "${name}" from the list? This won't touch their past watched marks, just the row.`)) return;
+  try {
+    await db.collection('cutlog_meta').doc('known_users').update({
+      list: firebase.firestore.FieldValue.arrayRemove(name)
+    });
+  } catch (e) { alert("Couldn't remove — check your connection."); }
 }
 
 /* ===================== YOUTUBE TITLE FETCH (no API key needed) ===================== */
