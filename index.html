@@ -1955,10 +1955,10 @@ function init() {
   renderQuote();
   loadMemePopupPref();
   if (!isConfigured) { showConfigWarning(); return; }
-  loadUser();
 
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
+  loadUser();
   attachChatListener();
   attachUpdatesListener();
   attachKnownUsersListener();
