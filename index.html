@@ -1030,7 +1030,16 @@ async function onCatDragEnd() {
   catDrag = null;
   document.querySelectorAll('#catList .cat-link.dragging').forEach(el => el.classList.remove('dragging'));
   try {
-    await db.collection('cutlog_meta').doc('categories').set({ list: finalOrder });
+    const ref = db.collection('cutlog_meta').doc('categories');
+    await db.runTransaction(async (tx) => {
+      const doc = await tx.get(ref);
+      const current = (doc.exists && doc.data().list && doc.data().list.length) ? doc.data().list : DEFAULT_CATEGORIES;
+      // Reconcile against the latest list so a slow drag never wipes out sections
+      // someone else added (or removed) while it was in progress.
+      const reconciled = finalOrder.filter(c => current.includes(c));
+      current.forEach(c => { if (!reconciled.includes(c)) reconciled.push(c); });
+      tx.set(ref, { list: reconciled });
+    });
   } catch (err) { alert("Couldn't save the new order — check your connection."); }
 }
 
@@ -1476,8 +1485,16 @@ async function onKwDragEnd() {
   const finalOrder = [...kwDrag.order];
   kwDrag = null;
   document.querySelectorAll('#channelKeywordList .cat-link.dragging').forEach(el => el.classList.remove('dragging'));
-  try { await db.collection('cutlog_meta').doc('channel_keywords').set({ list: finalOrder }); }
-  catch (err) { alert("Couldn't save the new order — check your connection."); }
+  try {
+    const ref = db.collection('cutlog_meta').doc('channel_keywords');
+    await db.runTransaction(async (tx) => {
+      const doc = await tx.get(ref);
+      const current = (doc.exists && doc.data().list && doc.data().list.length) ? doc.data().list : DEFAULT_CHANNEL_KEYWORDS;
+      const reconciled = finalOrder.filter(k => current.includes(k));
+      current.forEach(k => { if (!reconciled.includes(k)) reconciled.push(k); });
+      tx.set(ref, { list: reconciled });
+    });
+  } catch (err) { alert("Couldn't save the new order — check your connection."); }
 }
 
 let channelSearchQuery = '';
